@@ -4,7 +4,7 @@ Markdown-based skills for spec-driven development. Optimised for [Claude Code](h
 
 ## What Makes Neat SDD Different
 
-**1. Strict Guardrails** — Audit queries the knowledge base to verify cross-cutting consistency across planning, features, domain knowledge, and coverage after changes. Gate enforces spec alignment at every build transition (brainstorming → plan → execute) with three-layer verification. Both prevent drift and catch errors humans miss.
+**1. Strict Guardrails** — Audit queries the knowledge base to verify cross-cutting consistency across planning, features, domain knowledge, and coverage after changes. Gate enforces spec alignment at every build transition (brainstorming → plan → execute) with independent AI review. Both prevent drift and catch errors humans miss.
 
 **2. Self-improving Knowledge Base** — specs.md indexes analysis reports, domain knowledge, planning, and features as queryable knowledge sources. The knowledge skill's Q&A mode synthesizes answers from KB, code, internet, and library docs — then saves knowledge-generating conversations as FAQ documents that become part of the KB. Every question that uncovers new insights grows the knowledge base. Build phases query this KB to enrich design decisions with architectural patterns and domain insights. Code remains the source of truth; KB provides guidance.
 
@@ -81,7 +81,7 @@ This is where spec gates kick in. The feature doc produced by refinement becomes
 - **Spec Gate** → verifies code against feature doc acceptance criteria using `neat-sdd-gate`
 - **Status update** → updates feature doc to `state: implemented`
 
-Gates use three-layer verification: structural check, automated verification, and independent review.
+Gates use independent AI review (Haiku-powered) for fast, cost-effective verification against acceptance criteria.
 
 ### Context Phase
 
@@ -103,7 +103,7 @@ Independent utility skills that can be called standalone or as part of other wor
 | `neat-knowledge-ingest` | Convert web/PDF/Office/ZIP/images to structured markdown with indexing | Standalone for adding content to KB |
 | `neat-sdd-adr` | Create or extract architectural decisions as formal ADRs in MADR format | Standalone conversational mode or extraction mode (can be called by other skills) |
 | `neat-sdd-audit` | Cross-cutting consistency check across planning, features, domain knowledge, and coverage | Run after pipeline changes to verify KB consistency |
-| `neat-sdd-gate` | Three-layer verification (structural, automated, independent review) against feature doc acceptance criteria | Called by `neat-sdd-build` to verify design/plan/code |
+| `neat-sdd-gate` | Independent AI review against feature doc acceptance criteria | Called by `neat-sdd-build` to verify design/plan/code |
 | `neat-sdd-changes` | Generate audience-appropriate change notes from git commit history | Standalone for release notes, changelogs |
 
 ## Install / Uninstall
