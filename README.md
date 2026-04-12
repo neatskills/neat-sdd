@@ -20,8 +20,10 @@ Markdown-based skills for spec-driven development. Optimised for [Claude Code](h
 │     │           │         │           │          │    │         │                    │
 │     ▼           ▼         ▼           ▼          │    │         ▼                    │
 │ Understand   Deepen   Prioritize   Scope         │    │    plan        [gate]        │
-│ the product  domain   what to do   into          │    │    execute     [gate]        │
-│              knowledge             features      │    │                              │
+│ the product  domain   what to do   into          │    │         │                    │
+│              knowledge             features      │    │         ▼                    │
+│                                                  │    │    execute     [gate]        │
+│                                                  │    │         │                    │
 │                                                  │    │         ▼                    │
 │                                                  │    │    audit (after 2+ features) │
 │                                                  │    │                              │
