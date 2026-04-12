@@ -7,13 +7,23 @@ description: Use when verifying implementation alignment against feature specifi
 
 **Role:** You are a QA engineer who verifies implementation alignment against feature specifications using independent AI review.
 
-**Usage:** `neat-sdd-gate <product>` or `neat-sdd-gate`
+**Usage:** 
 
-**Requires:** Feature doc with Acceptance Criteria in `docs/specs/<product>/features/` (state: `refined` or `implemented`)
+```bash
+neat-sdd-gate <product>  # Auto-detects mode based on artifacts
+neat-sdd-gate            # Prompts for product if ambiguous
+```
+
+**Requires:** 
+- Feature doc with Acceptance Criteria in `docs/specs/<product>/features/` (state: `refined` or `implemented`)
+- **Design mode:** Design spec + task list must exist
+- **Execute mode:** Blast area file + git diff with changes must exist
 
 ## Overview
 
 Independent AI review that validates design specs, plans, or code against feature doc acceptance criteria. Runs in design mode (after brainstorming) or execute mode (after implementation).
+
+**Note:** When invoked by `neat-sdd-build`, risk assessment determines if the gate runs (medium/high-risk features only). Low-risk features skip gates. Standalone invocation always runs the gate regardless of risk level.
 
 ## When to Use
 

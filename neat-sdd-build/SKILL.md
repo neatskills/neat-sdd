@@ -108,25 +108,11 @@ Per [Dependency Analysis Algorithm](references/dependency-analysis.md):
 
 ### Step 5: Risk Assessment + Spec Gate — Design + Plan
 
-**Risk Assessment:** Analyze signals to determine if gate is needed:
+**Risk Assessment:** Analyze design complexity per [risk assessment algorithm](references/risk-assessment.md#design-phase-assessment).
 
-**High-risk signals:**
-- Task count > 15
-- Keywords in goal/criteria: `auth`, `payment`, `security`, `migration`, `database`, `breaking`, `API`
-- Blast area > 5 files
-- Dependencies on other features (has `depends_on`)
-
-**Medium-risk signals:**
-- Task count 10-15
-- ADRs extracted > 0 (architectural significance)
-- Blast area 3-5 files
-
-**Decision:**
-- ANY high-risk signal → Run gate
-- ANY medium-risk signal (and no high) → Run gate
-- All signals low → Skip gate, log "Skipped design gate (low-risk feature: [X] tasks, [Y] files, no keywords)"
-
-If gate runs, invoke `neat-sdd-gate` (design mode) with feature doc + design + plan.
+**If gate runs:**
+1. Ensure artifacts exist: feature doc, design spec, task plan
+2. Invoke `neat-sdd-gate <product>` (auto-detects design mode based on artifacts)
 
 ### Step 6: Execution
 
@@ -141,35 +127,15 @@ See [Parallel Execution Reference](references/parallel-execution.md).
 
 ### Step 7: Risk Assessment + Spec Gate — Execute
 
-**Risk Assessment:** Analyze actual implementation to determine if gate is needed:
+**Risk Assessment:** Analyze implementation complexity per [risk assessment algorithm](references/risk-assessment.md#execute-phase-assessment).
 
-**High-risk signals:**
-- Git diff files > 10
-- Git diff lines (insertions + deletions) > 500
-- Keywords in diff: `auth`, `payment`, `security`, `migration`, `schema`, `breaking`, `deprecated`
-- Modified files in critical paths: `auth/`, `payment/`, `security/`, `migrations/`, `api/`
-
-**Medium-risk signals:**
-- Git diff files 5-10
-- Git diff lines 200-500
-- New database models or API endpoints
-
-**Decision:**
-- ANY high-risk signal → Run gate
-- ANY medium-risk signal (and no high) → Run gate
-- All signals low → Skip gate, log "Skipped execute gate (low-risk implementation: [X] files, [Y] lines changed)"
-
-**Detection commands:**
-```bash
-git diff --stat main...HEAD                    # Count files and lines
-git diff main...HEAD | grep -i "auth\|payment"  # Check for keywords
-```
-
-If gate runs, invoke `neat-sdd-gate` (execute mode) with feature doc + codebase.
+**If gate runs:**
+1. Ensure artifacts exist: feature doc, blast area file, git diff with changes
+2. Invoke `neat-sdd-gate <product>` (auto-detects execute mode based on artifacts)
 
 ### Step 8: Update Feature Doc
 
-1. **Update feature file:** Update frontmatter `state: implemented`. Append `## Status` section: built date, branch, gate log reference.
+1. **Update feature file:** Update frontmatter `state: implemented`. Append `## Status` section: built date, branch, gate log path (if gates ran: `feature-{goal}-{nn}-{slug}-gates.md`).
 2. **Auto-ingest** (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)):
    - Check: `test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json && echo "ready" || echo "skip"`
    - If "ready":
@@ -191,6 +157,8 @@ Build another?
 ## Gate Handling
 
 **Note:** Gates only run if risk assessment determines the feature is medium or high risk. Low-risk features skip gates with logged reasoning.
+
+**If skipped gates lead to issues:** If a feature was assessed as low-risk and gates were skipped, but execution or integration tests reveal problems, manually invoke `neat-sdd-gate <product>` to verify alignment retroactively. The gate will auto-detect mode and validate against acceptance criteria.
 
 **On gate failure (design or execute mode):**
 
@@ -218,5 +186,5 @@ docs/specs/<product>/
   adrs/adr-YYYYMMDD-<decision>.md, index.md
   features/
     feature-{goal}-{nn}-{slug}.md              # state: implemented, with Status
-    feature-{goal}-{nn}-{slug}-gates.md
+    feature-{goal}-{nn}-{slug}-gates.md        # created/appended by neat-sdd-gate automatically
 ```
