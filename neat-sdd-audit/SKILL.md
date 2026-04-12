@@ -121,7 +121,7 @@ Run all checks whose inputs exist. Skip others and note in report.
 
 ### Step 1: Run Applicable Checks
 
-Execute checks 1-4 based on inputs available. Collect findings. Note skipped checks with reasons.
+Execute checks 1-4 based on inputs available. After completing each check, continue to the next check. Collect findings. Note skipped checks with reasons.
 
 ### Step 2: Present Audit Report (BLOCKING)
 

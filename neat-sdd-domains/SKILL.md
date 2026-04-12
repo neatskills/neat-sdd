@@ -101,6 +101,8 @@ Dispatch Explore with context, scope, paths.
 
 **Example:** Topic "token rotation" → Explore with: "Investigate token rotation mechanisms in the auth system. Focus on refresh flows, expiration handling, and storage."
 
+After the investigation completes, proceed to Step 9 (Merge).
+
 ### 9. Merge
 
 **Updating:** Contradiction detection, resolve, update.

@@ -83,6 +83,8 @@ Parse components → keywords → search → rank → confirm.
 
 Query KB per [knowledge query pattern](../references/output-access.md) for relevant context (analysis sections, domain knowledge, existing patterns). Invoke `/brainstorming` with feature doc, specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
 
+After brainstorming completes, proceed to Step 3.5 (Extract ADRs).
+
 ### Step 3.5: Extract ADRs
 
 Invoke `neat-sdd-adr {design-spec} {feature-doc} integrated`. May produce zero ADRs if no architecturally significant decisions.

@@ -72,6 +72,8 @@ description: Use when creating or extracting architectural decisions - standalon
 
 Ask topic. Query KB per [knowledge query pattern](../references/output-access.md): architectural patterns, existing ADRs, L3 components, L5/L6 constraints/risks, domain knowledge. Inform questions/recommendations.
 
+After gathering context, proceed to Phase 1 (Conversation).
+
 ### Phase 1: Conversation
 
 Ask: "What decision?" "What problem?" Check: decision, context, alternatives, rationale, consequences. If missing: "Alternatives?" (suggest), "Why?", "Trade-offs?", "Risks?" Use context to suggest alternatives, identify conflicts, recommend alignment. Stop when all 5 present or "none". See [examples](references/examples.md).
