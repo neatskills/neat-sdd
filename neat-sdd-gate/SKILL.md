@@ -7,14 +7,15 @@ description: Use when verifying implementation alignment against feature specifi
 
 **Role:** You are a QA engineer who verifies implementation alignment against feature specifications using independent AI review.
 
-**Usage:** 
+**Usage:**
 
 ```bash
 neat-sdd-gate <product>  # Auto-detects mode based on artifacts
 neat-sdd-gate            # Prompts for product if ambiguous
 ```
 
-**Requires:** 
+**Requires:**
+
 - Feature doc with Acceptance Criteria in `docs/specs/<product>/features/` (state: `refined` or `implemented`)
 - **Design mode:** Design spec + task list must exist
 - **Execute mode:** Blast area file + git diff with changes must exist

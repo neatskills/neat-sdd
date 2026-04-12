@@ -111,6 +111,7 @@ Per [Dependency Analysis Algorithm](references/dependency-analysis.md):
 **Risk Assessment:** Analyze design complexity per [risk assessment algorithm](references/risk-assessment.md#design-phase-assessment).
 
 **If gate runs:**
+
 1. Ensure artifacts exist: feature doc, design spec, task plan
 2. Invoke `neat-sdd-gate <product>` (auto-detects design mode based on artifacts)
 
@@ -130,6 +131,7 @@ See [Parallel Execution Reference](references/parallel-execution.md).
 **Risk Assessment:** Analyze implementation complexity per [risk assessment algorithm](references/risk-assessment.md#execute-phase-assessment).
 
 **If gate runs:**
+
 1. Ensure artifacts exist: feature doc, blast area file, git diff with changes
 2. Invoke `neat-sdd-gate <product>` (auto-detects execute mode based on artifacts)
 
