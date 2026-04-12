@@ -4,7 +4,7 @@ Markdown-based skills for spec-driven development. Optimised for [Claude Code](h
 
 ## What Makes Neat SDD Different
 
-**1. Strict Guardrails** — Audit queries the knowledge base to verify cross-cutting consistency across planning, features, domain knowledge, and coverage after changes. Gate enforces spec alignment at every build transition (brainstorming → plan → execute) with independent AI review. Both prevent drift and catch errors humans miss.
+**1. Strict Guardrails** — Audit queries the knowledge base to verify cross-cutting consistency across planning, features, domain knowledge, and coverage after changes. Gate enforces spec alignment at build transitions (brainstorming → plan → execute) using risk-based independent AI review. Low-risk features skip gates; medium/high-risk features get verified. Both prevent drift and catch errors humans miss.
 
 **2. Self-improving Knowledge Base** — specs.md indexes analysis reports, domain knowledge, planning, and features as queryable knowledge sources. The knowledge skill's Q&A mode synthesizes answers from KB, code, internet, and library docs — then saves knowledge-generating conversations as FAQ documents that become part of the KB. Every question that uncovers new insights grows the knowledge base. Build phases query this KB to enrich design decisions with architectural patterns and domain insights. Code remains the source of truth; KB provides guidance.
 
@@ -71,17 +71,17 @@ A human-in-the-loop funnel — each step produces progressively deeper understan
 
 This is where spec gates kick in. The feature doc produced by refinement becomes the contract, and every transition is verified against it — preventing drift between intent and execution.
 
-**Build** (`neat-sdd-build`) — Orchestrates end-to-end feature implementation from spec through verified code with spec gate verification at every transition. Requires existing feature docs from refinement. Queries the knowledge base to enrich brainstorming with architectural patterns and domain insights.
+**Build** (`neat-sdd-build`) — Orchestrates end-to-end feature implementation from spec through verified code with risk-based gate verification. Requires existing feature docs from refinement. Queries the knowledge base to enrich brainstorming with architectural patterns and domain insights.
 
 - **Readiness check** → evaluates doc quality (acceptance criteria, blast area, risks, goal coverage), discovers blast area files
 - **Brainstorming** → queries KB for patterns and domain knowledge, reads code in blast area, produces design spec
 - **Writing Plans** → breaks design into TDD implementation tasks with exact file paths, splits if >15 tasks
-- **Spec Gate** → verifies design + plan against feature doc acceptance criteria using `neat-sdd-gate`
+- **Risk Assessment + Spec Gate** → analyzes design complexity (task count, keywords, dependencies, blast area size) and runs gate if medium/high risk
 - **Execute** → produces working code via grouped parallel, subagent-driven, or inline execution
-- **Spec Gate** → verifies code against feature doc acceptance criteria using `neat-sdd-gate`
+- **Risk Assessment + Spec Gate** → analyzes implementation (diff size, modified files, critical paths) and runs gate if medium/high risk
 - **Status update** → updates feature doc to `state: implemented`
 
-Gates use independent AI review (Haiku-powered) for fast, cost-effective verification against acceptance criteria.
+Gates use independent AI review (Haiku-powered) for fast, cost-effective verification against acceptance criteria. Risk assessment prevents unnecessary gates for simple features while ensuring thorough verification of complex or critical changes.
 
 ### Context Phase
 

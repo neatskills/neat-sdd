@@ -9,7 +9,7 @@ description: Use when building a refined feature end-to-end - orchestrates desig
 
 ## Overview
 
-Orchestrates builds: readiness → brainstorming → ADR extraction → writing-plans → spec gate → execution → spec gate.
+Orchestrates builds: readiness → brainstorming → ADR extraction → writing-plans → risk assessment + spec gate → execution → risk assessment + spec gate.
 
 **Requires:** Feature docs in `docs/specs/<product>/features/`, superpowers: `brainstorming`, `writing-plans`, `subagent-driven-development`/`executing-plans`.
 
@@ -29,9 +29,9 @@ Orchestrates builds: readiness → brainstorming → ADR extraction → writing-
 | 2-2.5 | Check entry criteria, doc quality, discover blast area |
 | 3-3.5 | Design (query KB), extract ADRs |
 | 4-4.5 | Write TDD tasks, analyze dependencies |
-| 5 | Spec gate: design + plan |
+| 5 | Risk assessment → gate design + plan (if needed) |
 | 6-6a | Execute layer-by-layer |
-| 7 | Spec gate: code |
+| 7 | Risk assessment → gate code (if needed) |
 | 8 | Update feature doc status, auto-ingest to KB |
 | 9 | Prompt for audit if 2+ features with relationships |
 | 10 | Continue building |
@@ -106,9 +106,27 @@ Per [Dependency Analysis Algorithm](references/dependency-analysis.md):
 
 **Example:** 25 tasks → L0: 15 (independent), L1: 8, L2: 2.
 
-### Step 5: Spec Gate — Design + Plan
+### Step 5: Risk Assessment + Spec Gate — Design + Plan
 
-Invoke `neat-sdd-gate` (design mode) with feature doc + design + plan.
+**Risk Assessment:** Analyze signals to determine if gate is needed:
+
+**High-risk signals:**
+- Task count > 15
+- Keywords in goal/criteria: `auth`, `payment`, `security`, `migration`, `database`, `breaking`, `API`
+- Blast area > 5 files
+- Dependencies on other features (has `depends_on`)
+
+**Medium-risk signals:**
+- Task count 10-15
+- ADRs extracted > 0 (architectural significance)
+- Blast area 3-5 files
+
+**Decision:**
+- ANY high-risk signal → Run gate
+- ANY medium-risk signal (and no high) → Run gate
+- All signals low → Skip gate, log "Skipped design gate (low-risk feature: [X] tasks, [Y] files, no keywords)"
+
+If gate runs, invoke `neat-sdd-gate` (design mode) with feature doc + design + plan.
 
 ### Step 6: Execution
 
@@ -121,9 +139,33 @@ Execute layer-by-layer using dependency analysis from Step 4.5. Per layer:
 
 See [Parallel Execution Reference](references/parallel-execution.md).
 
-### Step 7: Spec Gate — Execute
+### Step 7: Risk Assessment + Spec Gate — Execute
 
-Invoke `neat-sdd-gate` (execute mode) with feature doc + codebase.
+**Risk Assessment:** Analyze actual implementation to determine if gate is needed:
+
+**High-risk signals:**
+- Git diff files > 10
+- Git diff lines (insertions + deletions) > 500
+- Keywords in diff: `auth`, `payment`, `security`, `migration`, `schema`, `breaking`, `deprecated`
+- Modified files in critical paths: `auth/`, `payment/`, `security/`, `migrations/`, `api/`
+
+**Medium-risk signals:**
+- Git diff files 5-10
+- Git diff lines 200-500
+- New database models or API endpoints
+
+**Decision:**
+- ANY high-risk signal → Run gate
+- ANY medium-risk signal (and no high) → Run gate
+- All signals low → Skip gate, log "Skipped execute gate (low-risk implementation: [X] files, [Y] lines changed)"
+
+**Detection commands:**
+```bash
+git diff --stat main...HEAD                    # Count files and lines
+git diff main...HEAD | grep -i "auth\|payment"  # Check for keywords
+```
+
+If gate runs, invoke `neat-sdd-gate` (execute mode) with feature doc + codebase.
 
 ### Step 8: Update Feature Doc
 
@@ -147,6 +189,8 @@ If 2+ implemented features AND current has `depends_on` or blast area overlaps: 
 Build another?
 
 ## Gate Handling
+
+**Note:** Gates only run if risk assessment determines the feature is medium or high risk. Low-risk features skip gates with logged reasoning.
 
 **On gate failure (design or execute mode):**
 

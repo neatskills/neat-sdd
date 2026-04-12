@@ -39,7 +39,10 @@
 
 ## Gates
 
-- Never skip or proceed after FAIL
+- Always run risk assessment before gates (Steps 5, 7)
+- Log decision if gate skipped (show signals: task count, files, keywords)
+- Never manually skip risk assessment
+- Never skip or proceed after gate FAIL
 - 3 retry → escalate
 
 ## Completion
