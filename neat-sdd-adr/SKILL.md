@@ -70,7 +70,7 @@ description: Use when creating or extracting architectural decisions - standalon
 
 ### Phase 0: Context
 
-Ask topic. Query KB per [knowledge query pattern](../references/output-access.md): architectural patterns, existing ADRs, L3 components, L5/L6 constraints/risks, domain knowledge. Inform questions/recommendations.
+Ask topic. Query KB per [knowledge query pattern](../references/output-access.md) with questions like "What architectural decisions, components, constraints, and risks exist related to [topic]?" Agent evaluates and loads relevant ADRs, architectural patterns, domain knowledge. Inform questions/recommendations.
 
 After gathering context, proceed to Phase 1 (Conversation).
 

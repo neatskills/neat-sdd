@@ -81,7 +81,7 @@ Parse components → keywords → search → rank → confirm.
 
 ### Step 3: Brainstorming
 
-Query KB per [knowledge query pattern](../references/output-access.md) for relevant context (analysis sections, domain knowledge, existing patterns). Invoke `/brainstorming` with feature doc, specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
+Query KB per [knowledge query pattern](../references/output-access.md) for relevant context. Formulate specific questions based on blast area components (e.g., "What authentication patterns, token handling, and security decisions exist?" for auth features). Agent evaluates and loads relevant domain knowledge, existing patterns, and architectural guidance. Invoke `/brainstorming` with feature doc, specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
 
 After brainstorming completes, proceed to Step 3.5 (Extract ADRs).
 

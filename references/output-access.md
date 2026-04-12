@@ -1,27 +1,28 @@
 # Accessing Outputs
 
-**neat-sdd works independently** - reads output files from docs/specs/ directly. Optional: Install [neat-knowledge](https://github.com/neatskills/neat-knowledge) for 80-90% context savings through progressive disclosure and automatic KB management (see [auto KB pattern](neat-knowledge.md)).
+**neat-sdd works independently** - reads output files from docs/specs/ directly. Optional: Install [neat-knowledge](https://github.com/neatskills/neat-knowledge) for 80-90% context savings through agent-driven discovery and automatic KB management (see [auto KB pattern](neat-knowledge.md)).
 
 ## Core Principle
 
 **neat-sdd reads output files directly** (always works, higher context usage)
 
-**Optional enhancement:** Use `neat-knowledge-query` for progressive disclosure (80-90% context savings)
+**Optional enhancement:** Use `neat-knowledge-query` for agent-driven discovery (80-90% context savings)
 
-- **Extract mode**: Structured JSON for skill-to-skill calls
+- **Extract mode**: Intelligent discovery with structured JSON - agent evaluates relevance and loading depth
 - **Ask mode**: Natural language for human interaction
 
 ## Pattern (Optional Enhancement)
 
-**neat-sdd always works** by reading files directly. Progressive disclosure is an **optional performance optimization**.
+**neat-sdd always works** by reading files directly. Agent-driven discovery is an **optional performance optimization**.
 
 ```markdown
 Check: .index/metadata.json exists in docs/knowledge/?
   
-YES → Progressive disclosure available (OPTIONAL ENHANCEMENT):
-  - Use neat-knowledge-query extract mode
-  - Summaries loaded first (~1-3K tokens)
-  - Sections extracted on demand
+YES → Agent-driven discovery available (OPTIONAL ENHANCEMENT):
+  - Skills ask natural language questions
+  - Search returns 20-30 keyword matches with metadata
+  - Agent evaluates relevance and optimal loading depth
+  - Content loaded based on intelligent ROI assessment
   - Conversation caching (80-90% context savings)
   
 NO → Direct reads (ALWAYS WORKS):
@@ -31,102 +32,75 @@ NO → Direct reads (ALWAYS WORKS):
   - Same functionality, higher context usage
 ```
 
-**Both modes produce identical results** - progressive disclosure is purely a performance optimization.
+**Both modes produce identical results** - agent-driven discovery is purely a performance optimization.
 
-## Extract Mode (Optional - For Performance)
+## Extract Mode (Optional - Agent-Driven Discovery)
 
 **Note:** This is an optional enhancement. Skills work without neat-knowledge by reading files directly.
+
+**New Architecture:** Instead of hard-coded section names, skills ask natural language questions. An agent intelligently evaluates what to load based on relevance and token cost.
 
 **Command format (if neat-knowledge installed):**
 
 ```bash
-/neat-knowledge-query extract <source> <options>
+/neat-knowledge-query extract "<natural language query>"
 ```
 
-**Sources:**
+**How it works:**
 
-- `analysis` - Analysis document layers (L0-L6)
-- `domains` - Domain knowledge files
-- `features` - Feature specifications
-- `adrs` - Architectural Decision Records
+1. **Search stage:** Keyword filter returns 20-30 matches with rich metadata (summary, sections, token costs, tags)
+2. **Agent evaluation:** Two-part decision:
+   - **RELEVANCE:** Which documents are semantically relevant?
+   - **DEPTH:** What loading depth? (summaries/sections/full)
+3. **Load content:** Based on agent's ROI-optimized decision
+4. **Return JSON:** Structured response with `loaded` field indicating depth
 
-**Common options:**
+**Key benefits:**
 
-- `--sections <list>` - Specific sections to extract
-- `--format json` - Output format (default)
-- `--summary-only` - Return summaries without loading full content
-- `--filter <condition>` - Filter results (features, ADRs)
+- No hard-coded section names (L1, L2, L3, etc.)
+- Intelligent relevance filtering (semantic, not just keywords)
+- ROI optimization (token cost vs query needs)
+- Adaptive depth (overview → summaries, technical → sections, deep → full)
 
 ### Examples
 
-**Planning - Load context overview:**
+**Example 1 - Planning:**
 
 ```markdown
-Invoke Skill tool:
-  skill: neat-knowledge-query
-  args: extract analysis --sections L1,L2,L3,L4,L5 --format json
+Invoke: neat-knowledge-query extract "What is the tech stack, architectural components, integrations, and main workflows?"
 
-Parse JSON response:
-{
-  "sections": {
-    "L1": {
-      "structured": {
-        "tech_stack": ["Next.js 14", "React 18"],
-        "dependencies": ["express", "prisma"]
-      }
-    },
-    "L3": {
-      "structured": {
-        "components": ["API layer", "Auth service"],
-        "architecture_pattern": "Monolithic"
-      }
-    }
-  }
-}
-
-Extract: tech_stack, components for cross-checking
+Agent: Analysis relevant → load summary (2.5K tokens)
+Returns: { "documents": [...], "loading_strategy": "summary", "tokens_loaded": 2500 }
+Savings: 2.5K vs 8K+ full file (70% reduction)
 ```
 
-**Refinement - Load blast area context:**
+**Example 2 - Refinement (multiple queries):**
 
 ```markdown
-Invoke: neat-knowledge-query extract analysis --sections L3,L6 --format json
-Parse: L3 components, L6 risks
+Invoke: neat-knowledge-query extract "What are the architectural components and identified risks?"
+Returns: Components + risks (1.8K tokens)
 
-Invoke: neat-knowledge-query extract domains --summary-only
-Parse: Available domains for precision assessment
+Invoke: neat-knowledge-query extract "What domain knowledge is available?"
+Returns: Domain summaries (600 tokens)
 
-Use structured data for blast area derivation
-```
-
-**Build - Query patterns:**
-
-```markdown
-Invoke: neat-knowledge-query extract domains --domain 03-auth --sections token-rotation
-Parse: investigation content for patterns
-
-Use patterns in brainstorming context
-```
-
-**ADR - Get existing decisions:**
-
-```markdown
-Invoke: neat-knowledge-query extract adrs --summary-only
-Parse: Array of existing ADRs with titles and decisions
-
-Check for conflicts with new decision
+Total: 2.4K vs 10K+ direct reads (76% savings)
 ```
 
 ### Response Structure
 
-See [extract-mode-schema.md](../docs/architecture/extract-mode-schema.md) for complete schema.
-
 **Key fields:**
 
-- `source` - What was queried (analysis/domains/features/adrs)
-- `loaded_from` - Where data came from (summary/full/cache)
-- `sections` or `features` or `adrs` - Actual data
-- `metadata` - Token counts, cache hits, timestamps
+- `documents[]` - Array of loaded documents
+  - `filename` - Document filename
+  - `title` - Document title
+  - `category` - Category (analysis/domains/features/adrs)
+  - `loaded` - Depth loaded (summary/sections/full)
+  - `content` - Actual content based on agent decision
+  - `tokens` - Token costs for ROI tracking
+  - `tags` - Document tags
+- `loading_strategy` - Overall strategy (summaries/sections/full/mixed)
+- `tokens_loaded` - Total tokens loaded
+- `total` - Number of documents returned
 
 ## Ask Mode (For Humans)
 
@@ -166,101 +140,41 @@ Sources:
 
 Skills should check KB state in specs.md Outputs section to determine behavior (e.g., planning uses user-provided goal only when minimal; refinement uses Technical Decisions when minimal).
 
-## Progressive Disclosure Benefits
-
-**Context savings:**
-
-- Summary-only queries: ~1-3K tokens vs ~10K for full file (70-85% savings)
-- Section extraction: Load L1, L3 only = ~1.5K vs full file 10K (85% savings)
-- Conversation caching: L1 loaded once, reused in later queries (0 tokens, instant)
+## Agent-Driven Discovery Benefits
 
 **How it works:**
 
-1. First query loads summaries (~1-3K tokens, cached by Claude)
-2. Extract mode requests specific sections (L1, L3, L6)
-3. neat-knowledge checks: sections in summary? Return summary
-4. Not in summary? Spawn subagent to extract from full file
-5. Cache sections in conversation memory
-6. Future queries reuse cached sections (instant, no file load)
+1. Skills ask natural language questions
+2. Search returns 20-30 keyword matches with metadata (summaries, sections, token costs)
+3. Agent makes two-part decision:
+   - **RELEVANCE:** Which 2-5 docs semantically relevant?
+   - **DEPTH:** What loading depth? (summary ~2-3K / sections ~1-2K / full ~8K)
+4. Content loaded based on ROI, cached in conversation
+5. Future queries reuse cache (instant, 0 tokens)
 
-**Example conversation:**
-
-```text
-Query 1: extract analysis --sections L1,L3
-  → Load summaries (1.5K), return L1, L3 from summary (500 tokens)
-  → Context: 2K tokens
-
-Query 2: extract analysis --sections L6  
-  → L6 in summary (cache hit)
-  → Return instantly (200 tokens)
-  → Context: 2.2K tokens (no growth)
-
-Query 3: extract analysis --sections L4,L5
-  → Not in summary, spawn subagent
-  → Extract L4, L5 (1.8K tokens)
-  → Cache for future
-  → Context: 4K tokens
-
-Total loaded: 4K tokens vs 30K if loaded full file 3 times
-Savings: 87%
-```
-
-## Direct Read Mode (Always Works)
-
-**Standard operation without neat-knowledge:**
-
-```markdown
-Step X: Load KB Context
-
-**Standard operation (always works):**
-
-1. Read specs.md
-2. Parse "Outputs" section for entries
-3. Read files directly from docs/specs/
-   - For analysis: Read full file, extract needed sections in main context
-   - For domains: Read full file, extract needed sections
-   - For features: Read feature files matching filter
-4. Parse into structured data
-5. Continue with skill logic
-
-**With neat-knowledge (optional optimization):**
-
-Check: .index/metadata.json exists in docs/knowledge/?
-YES → Use neat-knowledge-query extract mode (80-90% context savings)
-NO → Use standard operation above
-
-Both paths produce same results, progressive disclosure is faster
-```
+**Typical savings:** 70-85% vs direct reads. Multi-query conversations with caching can reach 90%.
 
 ## Usage in Skills
 
-**Standard pattern (works always):**
+**Standard pattern for all skills:**
 
 ```markdown
-## Step X: Load Context from KB
-
-**Default mode (always works):**
-
-1. Read specs.md
-2. Parse KB entries (Analysis, Domains, Features, ADRs)
-3. Read files from docs/specs/
-4. Extract needed sections in main context
-5. Continue with skill logic
-
-**Optional optimization (if neat-knowledge installed):**
+## Step X: Load KB Context
 
 Check: .index/metadata.json exists in docs/knowledge/?
-If YES:
-  - Invoke neat-knowledge-query extract <source> --sections <sections>
-  - Parse JSON response (structured, predictable)
-  - 80-90% context savings vs direct reads
 
-If NO or invoke fails:
-  - Use default mode above
-  - Same results, higher context usage
+If YES (agent-driven discovery):
+  - Invoke: neat-knowledge-query extract "<natural language query>"
+  - Agent evaluates 20-30 keyword matches for relevance and depth
+  - Returns: Structured JSON (80-90% context savings)
 
-**Both paths produce same data structure**
-Skill logic works regardless of source
+If NO (direct reads):
+  - Read specs.md, parse KB entries
+  - Read files from docs/specs/ (analysis, domains, features, ADRs)
+  - Extract sections in main context
+  - Same results, higher token usage
+
+Both paths produce same data structure - skill logic works regardless
 ```
 
 ## Anti-Patterns
@@ -270,36 +184,38 @@ Skill logic works regardless of source
 - Require neat-knowledge for basic functionality (neat-sdd must work independently)
 - Fail if neat-knowledge unavailable (always have direct read fallback)
 - Load full files multiple times without checking cache (when using neat-knowledge)
+- Hard-code section names (L1, L2, L3, etc.) - use natural language queries
+- Pre-filter results yourself - let the agent evaluate relevance
+- Prescribe loading depth - let the agent decide based on ROI
 
 **DO:**
 
 - Make neat-knowledge optional (check availability, don't require it)
 - Support direct reads (always works, no dependencies)
-- Use progressive disclosure when available (80-90% context savings)
-- Request only sections needed when using extract mode
+- Use agent-driven discovery when available (80-90% context savings)
+- Ask clear, specific questions (what you need to know)
+- Trust the agent to filter relevance and optimize depth
 - Trust conversation caching when using neat-knowledge
 
 **If using neat-knowledge extract mode:**
 
-- Use --summary-only when full content not needed
-- Request specific sections, not --sections all
-- Trust conversation caching (sections loaded once)
+- Ask natural language questions focused on what you need
+- Let the agent evaluate which documents are relevant
+- Let the agent decide loading depth (summary/sections/full)
+- Trust the agent's ROI optimization
 
-## Schema Reference
+## Formulating Effective Queries
 
-Complete schema documentation: [docs/architecture/extract-mode-schema.md](../docs/architecture/extract-mode-schema.md)
+**✓ Good:** Specific questions let agent optimize depth and filter relevance
 
-**Key schemas:**
+- "What is the tech stack, architectural components, integrations, and main workflows?"
+- "What authentication patterns, token handling, and security decisions exist?"
+- "What architectural decisions have been made?"
 
-- Analysis: L0-L6 sections with structured fields (tech_stack, components, risks)
-- Domains: Overview + investigations with structured content
-- Features: Goal, criteria, risks, dependencies, blast area
-- ADRs: Title, status, context, decision, consequences
+**✗ Avoid:** Vague or prescriptive queries
 
-## Progressive Disclosure Architecture
+- ~~"Tell me about the system"~~ → Too broad
+- ~~"Load everything"~~ → Defeats optimization  
+- ~~"Get analysis L1-L6"~~ → Hard-coded sections (old pattern)
 
-See complete design:
-
-- [storage-architecture-final.md](../docs/architecture/storage-architecture-final.md) - Storage and independence
-- [section-extraction-strategy.md](../docs/architecture/section-extraction-strategy.md) - Caching algorithm
-- [progressive-disclosure-design.md](../docs/architecture/progressive-disclosure-design.md) - Full architecture
+**Multiple focused queries > one broad query.** Agent optimizes each individually, caches results, avoids loading unneeded content.

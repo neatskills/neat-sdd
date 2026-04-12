@@ -44,11 +44,17 @@ Use when goals need decomposition before refinement. Not for detailed specs or i
 
 ### Step 1: Load Context Overview
 
-Query KB per [knowledge query pattern](../references/output-access.md) for structured index:
+Query KB per [knowledge query pattern](../references/output-access.md):
 
-Progressive disclosure: `neat-knowledge-query extract analysis --sections L1,L2,L3,L4,L5 --format json`
+Agent-driven discovery:
 
-Parse: L1→tech_stack, L2→integrations, L3→components, L4→flows, L5→business_logic, L6→constraints/risks
+```markdown
+Invoke: neat-knowledge-query extract "What is the tech stack, integrations, architectural components, main workflows, and business logic?"
+```
+
+Agent evaluates keyword matches and decides loading depth (summary/sections/full based on ROI).
+
+Parse JSON: Extract tech_stack, integrations, components, workflows, business_logic from returned documents.
 
 Fallback: Read specs.md, parse KB entries, read analysis directly.
 
@@ -58,7 +64,7 @@ If KB minimal: Use goal only; factual questions become decision questions.
 
 **2.1 Generate questions:** List 2-5 questions about ambiguities (scope, users, integration, constraints, priorities). Categorize: **Factual** (KB) or **Decision** (user).
 
-**2.2 Query KB for factual answers:** Query KB per [knowledge query pattern](../references/output-access.md) with explanations and citations. Example: "Does system support real-time?" → Query L4 flows, relevant domains, synthesize with citations.
+**2.2 Query KB for factual answers:** Query KB per [knowledge query pattern](../references/output-access.md) with explanations and citations. Example: "Does system support real-time?" → Query "What workflows and integration patterns support real-time operations?" Agent evaluates and loads relevant analysis sections + domain knowledge, synthesize with citations.
 
 **2.3 Ask user decision questions:** Present only questions KB cannot answer (priorities, permissions, strategic choices).
 
@@ -66,7 +72,7 @@ If KB minimal: Use goal only; factual questions become decision questions.
 
 **3.1 Synthesize capabilities:** Break goal into functional capabilities (user-centric, independently refinable, clear value). Aim for 5-15 features. Avoid technical layers or vague goals.
 
-**3.2 Cross-check against architecture:** For each feature, identify components affected (L3), type (Incremental/Transformative), risks (blast radius, conflicts, ordering). Query KB for deeper understanding if needed.
+**3.2 Cross-check against architecture:** For each feature, identify components affected (from architectural components in KB), type (Incremental/Transformative), risks (blast radius, conflicts, ordering). Query KB for deeper understanding if needed with specific questions about component relationships or integration patterns.
 
 ### Step 4: Present and Iterate
 

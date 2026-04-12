@@ -42,25 +42,30 @@ Scans for `state: planned`, derives acceptance criteria, blast area, risks, depe
 Glob `docs/specs/<product>/features/feature-*.md`, filter `state: planned`. If none → STOP: "No planned features."
 4. **Load KB:**
 
-With progressive disclosure:
-  Invoke: neat-knowledge-query extract analysis --sections L3,L6 --format json
-  Parse: L3 components, L6 risks
-  
-  Invoke: neat-knowledge-query extract domains --summary-only
-  Parse: Available domain knowledge for coverage assessment
+Agent-driven discovery:
+
+```markdown
+Invoke: neat-knowledge-query extract "What are the architectural components and identified risks?"
+Parse: Components, risks from returned documents
+
+Invoke: neat-knowledge-query extract "What domain knowledge is available?"
+Parse: Available domain coverage for precision assessment
+```
+
+Agent evaluates keyword matches and decides loading depth based on ROI.
 
 Fallback:
   Read specs.md, parse KB entries
-  Read analysis L3, L6 sections directly
+  Read analysis for components, risks sections directly
   Read domain files for coverage
 
-Check KB state. If Minimal (no Analysis AND no Domain Knowledge): use Technical Decisions (Low precision), rely on Planning's initial assessment. If Partial (no Domain Knowledge) OR L3 also missing: derive from planning's initial assessment only, set precision to Low, recommend running `neat-sdd-domains`.
+Check KB state. If Minimal (no Analysis AND no Domain Knowledge): use Technical Decisions (Low precision), rely on Planning's initial assessment. If Partial (no Domain Knowledge) OR components section also missing: derive from planning's initial assessment only, set precision to Low, recommend running `neat-sdd-domains`.
 
 **Planning without KB:** Features planned with minimal KB will have only basic component identification. Refinement accepts this and sets precision to Low, using fallback criteria patterns.
 5. **Precision:**
 
 - High: Domain knowledge exists (e.g., domain-knowledge-04-backend.md covers auth flows)
-- Medium: L3 only (e.g., analysis identifies "Auth Service" component but no domain investigation)
+- Medium: Analysis components only (e.g., analysis identifies "Auth Service" component but no domain investigation)
 - Low: Technical Decisions only (e.g., no analysis, deriving from planning's initial "Components affected")
 
 ## Derivation
@@ -71,7 +76,7 @@ Check KB state. If Minimal (no Analysis AND no Domain Knowledge): use Technical 
 
 **Criteria patterns:** Real-time (latency, sync), Auth (OAuth, tokens), API (schema, errors), Fallback (core works, tests verify).
 
-**Risks:** Extract from L6 or "None identified."
+**Risks:** Extract from analysis risks section or "None identified."
 
 ## Dependency Detection
 
@@ -93,10 +98,10 @@ Detected:
 WARNING: User Session Manager requires auth but no feature provides it.
 ```
 
-L3 fallback:
+Analysis-only fallback:
 
 ```text
-WARNING: L3 detection (lower confidence). Verify.
+WARNING: Component detection from analysis only (lower confidence). Verify.
 
 Detected:
   - websocket-infrastructure (provides WebSocket Server)
