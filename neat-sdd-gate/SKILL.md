@@ -80,7 +80,7 @@ Output "🔍 Layer 1: Structural Check" and list files.
 
 **Execute:** Not on main, blast area exists, diff shows changes, no TODO/FIXME/HACK new lines
 
-Log: "✓" (PASS), "⚠" (WARN), "✗" (FAIL)
+Log: "PASS", "WARN", "FAIL"
 
 ## Layer 2: Automated Verification
 

@@ -70,7 +70,7 @@ description: Use when creating or extracting architectural decisions - standalon
 
 ### Phase 0: Context
 
-Ask topic. Query KB per [standard pattern](../references/output-access.md): architectural patterns, existing ADRs, L3 components, L5/L6 constraints/risks, domain knowledge. Inform questions/recommendations.
+Ask topic. Query KB per [knowledge query pattern](../references/output-access.md): architectural patterns, existing ADRs, L3 components, L5/L6 constraints/risks, domain knowledge. Inform questions/recommendations.
 
 ### Phase 1: Conversation
 
@@ -102,7 +102,7 @@ Parse → split by H3 → extract number, title, content. Filter ADR-worthy (mul
 
 **If significant decisions found:** Confirm: "Detected {N}: Significant ({X}), Uncertain ({Y}), Skipped ({Z}). Generate {X}?" → yes/no/add/remove
 
-**If no significant decisions:** Report: "✓ Extraction triggered: Analyzed {N} decisions, found 0 architecturally significant" and exit gracefully (this is valid, not an error)
+**If no significant decisions:** Report: "SUCCESS: Extraction triggered: Analyzed {N} decisions, found 0 architecturally significant" and exit gracefully (this is valid, not an error)
 
 ### Step 2: Assign Numbers
 
@@ -133,7 +133,7 @@ Steps:
 
 ### Step 4: Collect & Save
 
-Receive metadata (3 lines/ADR). Update index.md (sort by date number descending) and specs.md. Auto-ingest (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)): check skills installed → initialize KB if needed → invoke `neat-knowledge-ingest directory docs/specs/<product>/adrs/ --category adrs` → log "✓ Indexed {N} ADRs in project KB". Context benefit: ~30 tokens/ADR vs 800-1,200.
+Receive metadata (3 lines/ADR). Update index.md (sort by date number descending) and specs.md. Auto-ingest (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)): check skills installed → initialize KB if needed → invoke `neat-knowledge-ingest directory docs/specs/<product>/adrs/ --category adrs` → log "SUCCESS: Indexed {N} ADRs in project KB". Context benefit: ~30 tokens/ADR vs 800-1,200.
 
 ### Error Handling
 
@@ -149,18 +149,22 @@ Receive metadata (3 lines/ADR). Update index.md (sort by date number descending)
 **With ADRs:**
 
 ```text
-✓ Extraction triggered: Analyzed {N} decisions, filtered to {M} significant
-✓ Generated {M} ADRs: docs/specs/{product}/adrs/adr-{YYYYMMDD}-*.md
-✓ Index and specs.md updated
-✓ Indexed in project KB (if neat-knowledge available)
+SUCCESS: Extraction triggered: Analyzed {N} decisions, filtered to {M} significant
+SUCCESS: Generated {M} ADRs: docs/specs/{product}/adrs/adr-{YYYYMMDD}-*.md
+SUCCESS: Index and specs.md updated
+SUCCESS: Indexed in project KB (if neat-knowledge available)
 ```
 
 **Without ADRs (valid outcome):**
 
 ```text
-✓ Extraction triggered: Analyzed {N} decisions, found 0 architecturally significant
-ℹ No ADRs generated. All decisions were implementation-specific or trivial.
+SUCCESS: Extraction triggered: Analyzed {N} decisions, found 0 architecturally significant
+INFO: No ADRs generated. All decisions were implementation-specific or trivial.
 ```
+
+## Output
+
+ADRs are saved to `docs/specs/<product>/adrs/` per [output conventions](../references/output-conventions.md). Updated in specs.md Outputs section and KB.
 
 ## Common Mistakes
 

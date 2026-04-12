@@ -35,20 +35,6 @@ Scans for `state: planned`, derives acceptance criteria, blast area, risks, depe
 | 7 | Auto-ingest (if neat-knowledge available) |
 | 8 | Loop or finish |
 
-## Steps
-
-| # | Action | Details |
-|---|--------|---------|
-| 1 | Locate specs.md, output path | [Standard](../references/specs-location.md), [output rules](../references/output-conventions.md) |
-| 2 | Scan features/ | Find `state: planned`, load KB per [query pattern](../references/output-access.md) |
-| 3 | Present list | STOP - user picks |
-| 4 | Derive details | Blast area, criteria, risks from KB |
-| 5 | Derive dependencies | Auto-detect, STOP - user approves |
-| 6 | Present draft | STOP - allow edits |
-| 7 | Save | Update with `state: refined` |
-| 8 | Auto-ingest | If neat-knowledge available ([pattern](../references/neat-knowledge.md)) |
-| 9 | Loop | STOP - "Refine another?" |
-
 ## Setup
 
 1. **Locate specs.md** ([procedure](../references/specs-location.md))
@@ -69,7 +55,9 @@ Fallback:
   Read analysis L3, L6 sections directly
   Read domain files for coverage
 
-Check KB state. If Minimal (no Analysis AND no Domain Knowledge): use Technical Decisions (Low), mark for validation. If Partial (no Domain Knowledge) OR L3 also missing: derive from planning's initial assessment only, set precision to Low, recommend running `neat-sdd-domains`.
+Check KB state. If Minimal (no Analysis AND no Domain Knowledge): use Technical Decisions (Low precision), rely on Planning's initial assessment. If Partial (no Domain Knowledge) OR L3 also missing: derive from planning's initial assessment only, set precision to Low, recommend running `neat-sdd-domains`.
+
+**Planning without KB:** Features planned with minimal KB will have only basic component identification. Refinement accepts this and sets precision to Low, using fallback criteria patterns.
 5. **Precision:**
 
 - High: Domain knowledge exists (e.g., domain-knowledge-04-backend.md covers auth flows)
@@ -78,46 +66,21 @@ Check KB state. If Minimal (no Analysis AND no Domain Knowledge): use Technical 
 
 ## Derivation
 
-**Goal:** One sentence: what's true when done.
+**Goal:** One sentence outcome.
 
-**Blast Area** (High: KB detail, Medium: KB list, Low: Tech Decisions):
-Planning provides "Components affected" and "Type". Refinement adds precision.
+**Blast Area:** Planning provides components/type. Refinement adds precision: `> Precision: High/Medium/Low (source)` as first line. Components not files (e.g., "sync engine" not "src/sync.ts").
 
-Components not files: "WebSocket manager, sync engine" ✅ not "src/websocket/manager.ts" ❌
+**Criteria patterns:** Real-time (latency, sync), Auth (OAuth, tokens), API (schema, errors), Fallback (core works, tests verify).
 
-**Acceptance Criteria** (patterns):
-
-- Real-time: Changes <Nms, no data loss, offline sync
-- Auth: OAuth flow, token refresh, logout clears
-- API: Schema, error codes, rate limiting
-- Fallback: Core works, error handling, tests verify
-
-**Risks:** Extract from L6 for blast area. None: "None identified."
+**Risks:** Extract from L6 or "None identified."
 
 ## Dependency Detection
 
-Auto-detect **infrastructure dependencies** from component relationships (feature depends on another feature that provides required infrastructure/services). This is distinct from ordering constraints flagged during planning.
+Auto-detect infrastructure dependencies from component relationships.
 
-**Algorithm:**
+**Algorithm:** Parse blast area components, query KB for infrastructure, cross-reference providers in other features, validate, user confirms.
 
-1. Parse blast area for components
-2. Query KB for infrastructure (High: domain knowledge, Medium: L3)
-3. Cross-reference "Components affected" for providers
-4. Validate all detected dependencies exist in features directory (glob `feature-*.md`, check names)
-5. Present → user confirms/modifies
-
-**Edge cases:**
-
-| Case | Handling |
-|------|----------|
-| Missing dependency | STOP, recommend `neat-sdd-audit` |
-| No provider | Warn, suggest creating infrastructure feature first |
-| Low precision | L3 fallback with caveat or manual entry |
-| Circular | Detect cycles, require resolution |
-| Implemented | Include `state: implemented` (safe) |
-| Multiple | Show all, user selects |
-| Cross-repo | Include repo name |
-| Transitive | Direct only (A→B, not A→B→C) |
+**Edge cases:** Missing (warn, create or proceed manually), no provider (suggest infrastructure feature), circular (require resolution), transitive (direct only).
 
 **Examples:**
 
@@ -128,13 +91,13 @@ Detected:
   - websocket-infrastructure (provides WebSocket Server)
   - realtime-notifications (provides Notification Service)
 
-⚠️ User Session Manager requires auth but no feature provides it.
+WARNING: User Session Manager requires auth but no feature provides it.
 ```
 
 L3 fallback:
 
 ```text
-⚠️ L3 detection (lower confidence). Verify.
+WARNING: L3 detection (lower confidence). Verify.
 
 Detected:
   - websocket-infrastructure (provides WebSocket Server)
@@ -151,7 +114,7 @@ After user approves the refined feature:
    - If installed:
      - Check/initialize KB: `docs/knowledge/.index/summaries.json` exists? If NO → invoke `neat-knowledge-ingest --init-project-kb`
      - Invoke: `neat-knowledge-ingest file docs/specs/<product>/features/feature-{goal}-{nn}-{slug}.md --category features`
-     - Log: "✓ Indexed feature in project KB"
+     - Log: "Indexed feature in project KB"
    - If not installed: Skip
 3. **Loop:** STOP - "Refine another feature? (Y/n)"
 
@@ -193,27 +156,17 @@ Multi-repo: `[repo-name] component-name`. Components only.
 
 ## Re-refinement
 
-If already refined:
-
-1. Read, derive updates, diff
-2. Check downstream: features, components, plans, specs, gates
-3. Present → STOP
-4. Approved: save + recommend audit | Declined: discard
+If already refined: read, derive updates, check downstream, present diff. If approved: save + recommend audit. Else: discard.
 
 ## Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|
-| Creating new sections | Preserve structure |
-| Guessing blast area | Use coverage map |
+| Guessing blast area | Use KB coverage map |
 | Missing criteria | Derive from patterns |
-| No fallback | Use generic pattern |
-| Silent low precision | Show level, offer domains |
-| Not querying KB | Query components/risks |
-| Auto-approving changes | Show impact, wait |
-| Wrong paths | Follow output path rules |
-| Skipping re-refinement impact | Check downstream |
-| Asking for dependencies | Auto-detect, confirm |
+| Not querying KB | Query for components/risks |
+| Auto-approving re-refinement | Show downstream impact first |
+| Asking for dependencies | Auto-detect, user confirms only |
 
 ## Output
 

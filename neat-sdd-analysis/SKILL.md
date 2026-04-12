@@ -179,7 +179,7 @@ TodoWrite: ask structure/refs → (platform: check → prompt → list/select) �
    - If installed:
      - Check/initialize KB: `docs/knowledge/.index/summaries.json` exists? If NO → invoke `neat-knowledge-ingest --init-project-kb`
      - Invoke: `neat-knowledge-ingest file docs/specs/<product>/analysis-<product>.md --category analysis`
-     - Log: "✓ Indexed analysis in project KB"
+     - Log: "Indexed analysis in project KB"
    - If not installed: Skip (neat-sdd works independently)
 3. **Offer PDF:** "Want PDF? (needs `neat-utils`)" → invoke `neat-util-pdf`
 4. **Suggest:** `neat-knowledge-query` or `neat-sdd-domains`

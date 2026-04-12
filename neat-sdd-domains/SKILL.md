@@ -42,8 +42,8 @@ Select domain → build foundation → investigate topics → merge into one fil
 
 1. **Locate specs.md** ([procedure](../references/specs-location.md))
 2. **Construct output path** ([rules](../references/output-conventions.md))
-3. Read target analysis from KB
-4. Read `## Business Domains`
+3. Read target analysis from KB per [knowledge query pattern](../references/output-access.md)
+4. Read `## Business Domains` section from analysis
 5. Check existing Domain Knowledge
 
 ## Source of Truth
@@ -119,7 +119,7 @@ Dispatch Explore with context, scope, paths.
    - If installed:
      - Check/initialize KB: `docs/knowledge/.index/summaries.json` exists? If NO → invoke `neat-knowledge-ingest --init-project-kb`
      - Invoke: `neat-knowledge-ingest file docs/specs/<product>/domains/domain-knowledge-{NN}-{name}.md --category domains`
-     - Log: "✓ Indexed domain knowledge in project KB"
+     - Log: "Indexed domain knowledge in project KB"
    - If not installed: Skip
 3. Offer PDF (`neat-util-pdf`)
 4. Recommend `neat-sdd-audit`

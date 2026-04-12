@@ -36,50 +36,13 @@ Orchestrates builds: readiness → brainstorming → ADR extraction → writing-
 | 9 | Prompt for audit if 2+ features with relationships |
 | 10 | Continue building |
 
-## Flow
-
-```mermaid
-graph TD
-    A[Pick feature doc] --> S{Has Status?}
-    S -->|Yes| S1{Build again?}
-    S1 -->|No| END[Done]
-    S1 -->|Yes| S2[Delete artifacts, remove Status]
-    S2 --> R
-    S -->|No| P{Has plan?}
-    P -->|Yes| G[Execution]
-    P -->|No| DS{Has design?}
-    DS -->|Yes| W[Writing Plans: TDD tasks]
-    DS -->|No| R{Readiness check}
-    R -->|LOW| Z[Back to refinement]
-    R -->|HIGH or MEDIUM| C[Brainstorming: design only]
-    C --> C5[Extract ADRs]
-    C5 --> C5A{ADRs approved?}
-    C5A -->|Minor rejection| C5B[Update design + ADRs]
-    C5B --> C5A
-    C5A -->|Major rejection| C5C{Re-brainstorm or proceed?}
-    C5C -->|Re-brainstorm| C
-    C5C -->|Proceed| W
-    C5A -->|Success| W
-    W --> DA[Analyze dependencies into layers]
-    DA --> D{Spec Gate: design + plan}
-    D -->|FAIL| W
-    D -->|PASS| G[Execute layer-by-layer]
-    G --> H{Spec Gate: execute}
-    H -->|FAIL| G
-    H -->|PASS| I[Update feature doc status]
-    I --> J{2+ features with relationships?}
-    J -->|Yes| K[Prompt: Run audit?]
-    K -->|Y| L[Invoke audit]
-    L --> M[Continue building?]
-    K -->|n| M
-    J -->|No| M
-```
-
 ## Setup
 
 1. Locate specs.md ([procedure](../references/specs-location.md))
 2. Construct output path ([rules](../references/output-conventions.md))
-3. Read features, filter unbuilt (`state: refined`, no `## Status`)
+3. Read features, filter not implemented (`state: refined`, no `## Status` section)
+
+**Feature state tracking:** `state: implemented` means code is complete AND verified. Build updates both `state: implemented` (frontmatter) and appends `## Status` (section with build metadata).
 
 ## Process
 
@@ -99,14 +62,14 @@ Prerequisites must have `## Status`. Validate `depends_on` features exist. Missi
 
 #### 2b. Doc Quality
 
-| Criterion | Ready | Not ready |
-|-----------|-------|-----------|
-| Acceptance criteria | Testable, concrete | Vague/placeholder |
-| Blast area | High/Medium precision | Low/placeholder |
-| Risks | Identified, proportional | Missing/generic |
-| Goal | One-sentence | Missing/placeholder |
+| Criterion | Ready |
+|-----------|-------|
+| Acceptance criteria | Testable, concrete |
+| Blast Area section | High/Medium precision |
+| Risks | Identified, proportional |
+| Goal | One-sentence |
 
-Score: 4/4 = High, 2-3/4 = Medium, 0-1/4 = Low.
+Score: 4/4=High, 2-3/4=Medium, 0-1/4=Low.
 
 #### 2c. Route
 
@@ -118,7 +81,7 @@ Parse components → keywords → search → rank → confirm.
 
 ### Step 3: Brainstorming
 
-Query KB. Invoke `/brainstorming` with feature doc, specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
+Query KB per [knowledge query pattern](../references/output-access.md) for relevant context (analysis sections, domain knowledge, existing patterns). Invoke `/brainstorming` with feature doc, specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
 
 ### Step 3.5: Extract ADRs
 
@@ -147,25 +110,12 @@ Invoke `neat-sdd-gate` (design mode) with feature doc + design + plan.
 
 ### Step 6: Execution
 
-Execute layer-by-layer using dependency analysis from Step 4.5.
+Execute layer-by-layer using dependency analysis from Step 4.5. Per layer:
 
-**Per layer:**
-
-1. Spawn layer agent with `isolation: "worktree"`
-2. Pass all layer tasks, feature doc, design spec
-3. Layer agent decides strategy: `/subagent-driven-development` (default) or `/dispatching-parallel-agents` (if beneficial)
-4. Layer agent commits after each task
-5. After completion → merge worktree → integration tests
-6. Next layer starts only after previous passes tests
-7. Report: "Layer N/M complete"
-
-**Example:** L0 (15 tasks) → agent uses parallel → tests pass; L1 (8 tasks) → sequential → tests pass; L2 (2 tasks) → sequential → tests pass.
-
-### Step 6a: Layer Agent Details
-
-**Layer agent receives:** All layer tasks, feature doc, design spec, dependencies, worktree path/branch, commit instruction.
-
-**Layer agent autonomously:** Analyzes execution strategy, uses `/subagent-driven-development` or `/dispatching-parallel-agents`, runs integration tests, returns success/failure.
+1. Spawn agent with worktree isolation, pass layer tasks + feature doc + design spec
+2. Agent chooses strategy (`/subagent-driven-development` or `/dispatching-parallel-agents`), commits after each task
+3. Merge worktree, run integration tests
+4. Next layer after tests pass
 
 See [Parallel Execution Reference](references/parallel-execution.md).
 
@@ -175,32 +125,13 @@ Invoke `neat-sdd-gate` (execute mode) with feature doc + codebase.
 
 ### Step 8: Update Feature Doc
 
-Update frontmatter `state: implemented`. Append Status: built date, branch, gate log. Announce completion.
+Update frontmatter `state: implemented`. Append `## Status` section: built date, branch, gate log reference. Announce completion.
+
+**Both updates required:** Frontmatter tracks state, Status section provides build metadata.
 
 ### Step 9: Audit Prompt (If Applicable)
 
-Check if audit should be recommended:
-
-1. **Count implemented features:** Glob `feature-*.md` with `state: implemented`
-2. **Check current feature relationships:**
-   - Has `depends_on` field in frontmatter, OR
-   - Blast area overlaps with other implemented features
-3. **If 2+ implemented features AND current feature has relationships:**
-
-```
-Multiple features now implemented:
-- feature-auth (implemented)
-- feature-tasks (implemented)
-
-Current feature has dependencies/overlaps. Consider running audit to verify cross-feature integration.
-
-Run audit now? Y/n
-```
-
-4. **If Y:** Invoke `neat-sdd-audit`
-5. **If n:** Continue to build prompt
-
-**If < 2 features OR no relationships:** Skip to build prompt.
+If 2+ implemented features AND current has `depends_on` or blast area overlaps: prompt "Run audit to verify cross-feature integration? Y/n". If Y: invoke `neat-sdd-audit`. Otherwise skip.
 
 ### Step 10: Continue Building
 
@@ -208,7 +139,16 @@ Build another?
 
 ## Gate Handling
 
-Max 3 attempts. Criteria changes: surface to user, update if approved, re-run.
+**On gate failure (design or execute mode):**
+
+1. Present gate findings (blockers, warnings)
+2. Ask user: "Fix plan | Fix design | Accept as-is | Abort"
+   - **Fix plan:** Return to Step 4 (writing-plans), update plan, re-run gate
+   - **Fix design:** Return to Step 3 (brainstorming), update design + plan, re-run gate
+   - **Accept as-is:** User acknowledges risk, proceed to next step
+   - **Abort:** Stop build, feature remains `state: refined`
+3. Max 3 gate attempts per step. After 3 failures, escalate to user for decision.
+4. **Criteria changes:** If gate reveals feature doc criteria are wrong, surface to user, update if approved, re-run gate.
 
 ## Common Mistakes
 
