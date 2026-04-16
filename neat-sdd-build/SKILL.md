@@ -9,7 +9,9 @@ description: Use when building a refined feature end-to-end - orchestrates desig
 
 ## Overview
 
-Orchestrates builds: readiness → brainstorming → ADR extraction → writing-plans → risk assessment + spec gate → execution → risk assessment + spec gate.
+Orchestrates continuous parallel builds: readiness → brainstorming → ADR extraction → writing-plans → risk assessment + spec gate → execution → risk assessment + spec gate.
+
+**Execution model:** Dynamic parallel queuing - as features complete, new independent features are automatically prepared and spawned.
 
 **Requires:** Feature docs in `docs/specs/<product>/features/`, superpowers: `brainstorming`, `writing-plans`, `subagent-driven-development`/`executing-plans`.
 
@@ -138,17 +140,28 @@ For each prepared feature (has design + plan from Steps 1-5):
 
 See [Parallel Execution Reference](references/parallel-execution.md).
 
-### Step 6a: Monitor Completion
+### Step 6a: Monitor Completion & Dynamic Queuing
 
 Wait for background agents to complete. As each finishes:
 
 1. Retrieve completion status and worktree path
 2. Merge worktree to main branch
 3. Run integration tests for that feature
-4. If tests pass: proceed to Step 7 for that feature
+4. If tests pass: proceed to Step 7-8 for that feature
 5. If tests fail: log failure, continue monitoring others
 
-**Safety:** Features validated as independent (Step 1). Each works in isolated worktree, merges sequentially after completion.
+**After each feature finishes:**
+1. Check for remaining features with `state: refined`
+2. If found: validate independence from still-running features
+   - Check `depends_on`: no dependencies on running features
+   - Check blast areas: no overlap with running features
+   - Check task plans: no shared dependencies being modified
+3. If independent: run Steps 1-5 for new feature, spawn at Step 6 immediately
+4. If conflicts exist: wait for next completion, try again
+
+**Continue until:** No refined features remain OR all remaining features conflict with running ones.
+
+**Safety:** Continuous independence validation. Each works in isolated worktree, merges sequentially after completion.
 
 ### Step 7: Risk Assessment + Spec Gate — Execute
 
@@ -176,9 +189,9 @@ Wait for background agents to complete. As each finishes:
 
 If 2+ implemented features AND current has `depends_on` or blast area overlaps: prompt "Run audit to verify cross-feature integration? Y/n". If Y: invoke `neat-sdd-audit`. Otherwise skip.
 
-### Step 10: Continue Building
+### Step 10: Completion
 
-Check for remaining features with `state: refined`. If found, automatically return to Step 1 and present next batch for selection. If none remain, announce: "All features built."
+All features processed (built or logged as failed). Announce: "All features built."
 
 ## Gate Handling
 
