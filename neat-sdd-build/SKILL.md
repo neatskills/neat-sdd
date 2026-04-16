@@ -93,7 +93,24 @@ Parse components → keywords → search → rank → confirm.
 
 ### Step 3: Brainstorming
 
-Query KB per [knowledge query pattern](../references/output-access.md) for relevant context. Formulate specific questions based on blast area components (e.g., "What authentication patterns, token handling, and security decisions exist?" for auth features). Agent evaluates and loads relevant domain knowledge, existing patterns, and architectural guidance. Invoke `/brainstorming` with feature doc, specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
+**Load KB Context (per [knowledge query pattern](../references/output-access.md)):**
+
+Check: `docs/knowledge/.index/metadata.json` exists?
+
+**If YES (agent-driven discovery available):**
+- Formulate specific questions based on blast area components (e.g., "What authentication patterns, token handling, and security decisions exist?" for auth features)
+- Invoke: `neat-knowledge-query extract "<natural language query>"`
+- Agent evaluates 20-30 keyword matches for relevance and depth
+- Returns: Structured JSON (80-90% context savings)
+
+**If NO (direct reads fallback):**
+- Read `specs.md`, parse KB entries in Outputs section
+- Read relevant files from `docs/specs/` (analysis, domains, features, ADRs)
+- Extract sections directly in main context
+- Same functionality, higher context usage
+
+**Then invoke brainstorming:**
+Invoke `/brainstorming` with feature doc, specs.md, KB context (from either path), blast area. Output: `docs/superpowers/specs/`.
 
 After brainstorming completes, proceed to Step 3.5 (Extract ADRs).
 
