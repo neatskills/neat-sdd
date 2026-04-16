@@ -27,17 +27,21 @@ Orchestrates continuous parallel builds: readiness → brainstorming → ADR ext
 
 | Step | What |
 |------|------|
-| 1-1.5 | Pick feature(s), validate independence, resume from Status/plan/design or fresh |
-| 2-2.5 | Check entry criteria, doc quality, discover blast area (per feature) |
-| 3-3.5 | Design (query KB), extract ADRs (per feature) |
-| 4-4.5 | Write TDD tasks, analyze dependencies (per feature) |
-| 5 | Risk assessment → gate design + plan if needed (per feature) |
-| 6 | Spawn all features in background (isolated worktrees) |
-| 6a | Monitor completion, merge as finished |
-| 7 | Risk assessment → gate code if needed (per feature) |
-| 8 | Update feature doc status, auto-ingest to KB (per feature) |
-| 9 | Prompt for audit if 2+ features with relationships |
-| 10 | Continue building |
+| 1 | Pick feature(s), validate independence |
+| 2 | Automatic state detection - resume from Status/plan/design or fresh |
+| 3 | Check entry criteria, doc quality (per feature) |
+| 4 | Discover blast area (per feature) |
+| 5 | Design - query KB (per feature) |
+| 6 | Extract ADRs (per feature) |
+| 7 | Write TDD tasks (per feature) |
+| 8 | Analyze dependencies (per feature) |
+| 9 | Risk assessment → gate design + plan if needed (per feature) |
+| 10 | Spawn all features in background (isolated worktrees) |
+| 11 | Monitor completion, merge as finished |
+| 12 | Risk assessment → gate code if needed (per feature) |
+| 13 | Update feature doc status, auto-ingest to KB (per feature) |
+| 14 | Prompt for audit if 2+ features with relationships |
+| 15 | Continue building |
 
 ## Setup
 
@@ -63,17 +67,15 @@ Present features with entry criteria. User selects 1+ features to build.
 
 **If independent (or N=1):** Proceed with batch workflow (each in isolated worktree).
 
-### Step 1.5: Automatic State Detection
+### Step 2: Automatic State Detection
 
-Per [State Detection Algorithm](references/state-detection.md). `## Status` → "Build again?". Plan exists → resume Step 6. Design + ADRs → resume Step 4.
+Per [State Detection Algorithm](references/state-detection.md). `## Status` → "Build again?". Plan exists → resume Step 10. Design + ADRs → resume Step 7.
 
-### Step 2: Readiness Check
+### Step 3: Readiness Check
 
-#### 2a. Prerequisites
+**Prerequisites:** Must have `## Status`. Validate `depends_on` features exist. Missing dependencies → STOP, recommend `neat-sdd-audit`.
 
-Prerequisites must have `## Status`. Validate `depends_on` features exist. Missing dependencies → STOP, recommend `neat-sdd-audit`.
-
-#### 2b. Doc Quality
+**Doc Quality:**
 
 | Criterion | Ready |
 |-----------|-------|
@@ -84,15 +86,13 @@ Prerequisites must have `## Status`. Validate `depends_on` features exist. Missi
 
 Score: 4/4=High, 2-3/4=Medium, 0-1/4=Low.
 
-#### 2c. Route
+**Route:** High/Medium → Step 4. Low → refinement.
 
-High/Medium → Step 2.5. Low → refinement.
-
-### Step 2.5: Discover Blast Area Files
+### Step 4: Discover Blast Area Files
 
 Parse components → keywords → search → rank → confirm.
 
-### Step 3: Brainstorming
+### Step 5: Brainstorming
 
 **Load KB Context (per [knowledge query pattern](../references/output-access.md)):**
 
@@ -116,19 +116,19 @@ Check: `docs/knowledge/.index/metadata.json` exists?
 **Then invoke brainstorming:**
 Invoke `/brainstorming` with feature doc, specs.md, KB context (from either path), blast area. Output: `docs/superpowers/specs/`.
 
-After brainstorming completes, proceed to Step 3.5 (Extract ADRs).
+After brainstorming completes, proceed to Step 6 (Extract ADRs).
 
-### Step 3.5: Extract ADRs
+### Step 6: Extract ADRs
 
 Invoke `neat-sdd-adr {design-spec} {feature-doc} integrated`. May produce zero ADRs if no architecturally significant decisions.
 
-**Outcomes:** SUCCESS → Step 4 | MINOR → auto-fix | MAJOR → re-brainstorm.
+**Outcomes:** SUCCESS → Step 7 | MINOR → auto-fix | MAJOR → re-brainstorm.
 
-### Step 4: Writing Plans
+### Step 7: Writing Plans
 
 Invoke `/writing-plans` with design spec and feature doc. Output: `docs/superpowers/plans/`.
 
-### Step 4.5: Dependency Analysis
+### Step 8: Dependency Analysis
 
 Per [Dependency Analysis Algorithm](references/dependency-analysis.md):
 
@@ -139,7 +139,7 @@ Per [Dependency Analysis Algorithm](references/dependency-analysis.md):
 
 **Example:** 25 tasks → L0: 15 (independent), L1: 8, L2: 2.
 
-### Step 5: Risk Assessment + Spec Gate — Design + Plan
+### Step 9: Risk Assessment + Spec Gate — Design + Plan
 
 **Risk Assessment:** Analyze design complexity per [risk assessment algorithm](references/risk-assessment.md#design-phase-assessment).
 
@@ -148,7 +148,7 @@ Per [Dependency Analysis Algorithm](references/dependency-analysis.md):
 1. Ensure artifacts exist: feature doc, design spec, task plan
 2. Invoke `neat-sdd-gate <product>` (auto-detects design mode based on artifacts)
 
-### Step 6: Spawn Execution Agents
+### Step 10: Spawn Execution Agents
 
 For each prepared feature (has design + plan from Steps 1-5):
 
@@ -157,11 +157,11 @@ For each prepared feature (has design + plan from Steps 1-5):
 3. Agent executes all layers independently
 4. Track: feature name → agent ID → worktree path
 
-**After all spawned:** Continue immediately to Step 6a (Monitor Completion) - do NOT stop here.
+**After all spawned:** Continue immediately to Step 11 (Monitor Completion) - do NOT stop here.
 
 See [Parallel Execution Reference](references/parallel-execution.md).
 
-### Step 6a: Monitor Completion & Dynamic Queuing
+### Step 11: Monitor Completion & Dynamic Queuing
 
 Wait for background agents to complete. As each finishes:
 
@@ -175,28 +175,28 @@ Wait for background agents to complete. As each finishes:
 3. Merge worktree to main branch
 4. Run integration tests for that feature
 5. If tests pass:
-   - **IMMEDIATELY run Step 7 (Risk Assessment + Gate) - BLOCKING**
-   - **IMMEDIATELY run Step 8 (Update Feature Doc state: implemented) - BLOCKING**
+   - **IMMEDIATELY run Step 12 (Risk Assessment + Gate) - BLOCKING**
+   - **IMMEDIATELY run Step 13 (Update Feature Doc state: implemented) - BLOCKING**
    - **CRITICAL:** State MUST be updated BEFORE checking for next feature
 6. If tests fail:
    - Mark feature as failed (add `## Status - Failed` section)
    - Log failure, continue monitoring others
 
-**After feature state updated (Step 8 complete):**
+**After feature state updated (Step 13 complete):**
 
 1. Check for remaining features with `state: refined`
 2. If found: validate independence from still-running features
    - Check `depends_on`: no dependencies on running features
    - Check blast areas: no overlap with running features
    - Check task plans: no shared dependencies being modified
-3. If independent: run Steps 1-5 for new feature, spawn at Step 6 immediately
+3. If independent: run Steps 3-9 for new feature, spawn at Step 10 immediately
 4. If conflicts exist: wait for next completion, try again
 
 **Continue until:** No refined features remain OR all remaining features conflict with running ones.
 
-**CRITICAL SAFETY:** Feature state update (Step 8) is BLOCKING before spawning next feature. Prevents duplicate work on same feature.
+**CRITICAL SAFETY:** Feature state update (Step 13) is BLOCKING before spawning next feature. Prevents duplicate work on same feature.
 
-### Step 7: Risk Assessment + Spec Gate — Execute
+### Step 12: Risk Assessment + Spec Gate — Execute
 
 **Risk Assessment:** Analyze implementation complexity per [risk assessment algorithm](references/risk-assessment.md#execute-phase-assessment).
 
@@ -205,9 +205,9 @@ Wait for background agents to complete. As each finishes:
 1. Ensure artifacts exist: feature doc, blast area file, git diff with changes
 2. Invoke `neat-sdd-gate <product>` (auto-detects execute mode based on artifacts)
 
-### Step 8: Update Feature Doc (CRITICAL - BLOCKING)
+### Step 13: Update Feature Doc (CRITICAL - BLOCKING)
 
-**CRITICAL:** This step MUST complete before spawning next feature in Step 6a. Failure to update state immediately can cause duplicate work.
+**CRITICAL:** This step MUST complete before spawning next feature in Step 11. Failure to update state immediately can cause duplicate work.
 
 1. **Update feature file:** Update frontmatter `state: implemented`. Append `## Status` section: built date, branch, gate log path (if gates ran: `feature-{goal}-{nn}-{slug}-gates.md`).
 2. **Auto-ingest** (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)):
@@ -222,11 +222,11 @@ Wait for background agents to complete. As each finishes:
 
 **Red Flag:** If you're about to check for next feature but haven't updated state yet - STOP.
 
-### Step 9: Audit Prompt (If Applicable)
+### Step 14: Audit Prompt (If Applicable)
 
 If 2+ implemented features AND current has `depends_on` or blast area overlaps: prompt "Run audit to verify cross-feature integration? Y/n". If Y: invoke `neat-sdd-audit`. Otherwise skip.
 
-### Step 10: Completion
+### Step 15: Completion
 
 All features processed (built or logged as failed). Announce: "All features built."
 

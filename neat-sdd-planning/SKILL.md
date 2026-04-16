@@ -62,17 +62,17 @@ If KB minimal: Use goal only; factual questions become decision questions.
 
 ### Step 2: Clarify (Required Before Step 3)
 
-**2.1 Generate questions:** List 2-5 questions about ambiguities (scope, users, integration, constraints, priorities). Categorize: **Factual** (KB) or **Decision** (user).
+**Generate questions:** List 2-5 questions about ambiguities (scope, users, integration, constraints, priorities). Categorize: **Factual** (KB) or **Decision** (user).
 
-**2.2 Query KB for factual answers:** Query KB per [knowledge query pattern](../references/output-access.md) with explanations and citations. Example: "Does system support real-time?" → Query "What workflows and integration patterns support real-time operations?" Agent evaluates and loads relevant analysis sections + domain knowledge, synthesize with citations.
+**Query KB for factual answers:** Query KB per [knowledge query pattern](../references/output-access.md) with explanations and citations. Example: "Does system support real-time?" → Query "What workflows and integration patterns support real-time operations?" Agent evaluates and loads relevant analysis sections + domain knowledge, synthesize with citations.
 
-**2.3 Ask user decision questions:** Present only questions KB cannot answer (priorities, permissions, strategic choices).
+**Ask user decision questions:** Present only questions KB cannot answer (priorities, permissions, strategic choices).
 
 ### Step 3: Decompose and Cross-Check
 
-**3.1 Synthesize capabilities:** Break goal into functional capabilities (user-centric, independently refinable, clear value). Aim for 5-15 features. Avoid technical layers or vague goals.
+**Synthesize capabilities:** Break goal into functional capabilities (user-centric, independently refinable, clear value). Aim for 5-15 features. Avoid technical layers or vague goals.
 
-**3.2 Cross-check against architecture:** For each feature, identify components affected (from architectural components in KB), type (Incremental/Transformative), risks (blast radius, conflicts, ordering). Query KB for deeper understanding if needed with specific questions about component relationships or integration patterns.
+**Cross-check against architecture:** For each feature, identify components affected (from architectural components in KB), type (Incremental/Transformative), risks (blast radius, conflicts, ordering). Query KB for deeper understanding if needed with specific questions about component relationships or integration patterns.
 
 ### Step 4: Present and Iterate
 
@@ -80,7 +80,7 @@ Show: Name, brief description, components affected, type, risks. Iterate on feed
 
 ### Step 5: Save and Update
 
-**5.1 Derive goal identifier:** Extract 1-3 key terms from user's goal, create slug (lowercase, hyphens, max 20 chars).
+**Derive goal identifier:** Extract 1-3 key terms from user's goal, create slug (lowercase, hyphens, max 20 chars).
 
 **Examples:**
 
@@ -89,15 +89,15 @@ Show: Name, brief description, components affected, type, risks. Iterate on feed
 - "Build API v2 with GraphQL" → `api-v2`
 - "Migrate to microservices architecture" → `microservices`
 
-**5.2 Save feature docs:** Create `docs/specs/<product>/features/feature-{goal}-{nn}-{slug}.md` using format below. Use two-digit numbers (01, 02, etc.) scoped per goal identifier (each goal starts numbering at 01).
+**Save feature docs:** Create `docs/specs/<product>/features/feature-{goal}-{nn}-{slug}.md` using format below. Use two-digit numbers (01, 02, etc.) scoped per goal identifier (each goal starts numbering at 01).
 
-**5.3 Update specs.md Outputs:** Add Features entry per [standard format](../references/output-conventions.md):
+**Update specs.md Outputs:** Add Features entry per [standard format](../references/output-conventions.md):
 
 ```markdown
 - Features: docs/specs/<product>/features/ (8 features)
 ```
 
-**5.4 Recommend next step:** Suggest `neat-sdd-refinement` for detailed acceptance criteria.
+**Recommend next step:** Suggest `neat-sdd-refinement` for detailed acceptance criteria.
 
 ## Common Mistakes
 
@@ -107,7 +107,7 @@ Show: Name, brief description, components affected, type, risks. Iterate on feed
 | Asking factual questions | Query KB for facts, ask user for decisions |
 | Wrong granularity | 5-15 capabilities with user value |
 | Skipping architecture cross-check | Must identify components, type, risks |
-| Not deriving goal identifier | Derive from user's goal in Step 5.1 |
+| Not deriving goal identifier | Derive from user's goal in Step 5 |
 
 ## Output
 
