@@ -147,10 +147,15 @@ Wait for background agents to complete. As each finishes:
 1. Retrieve completion status and worktree path
 2. Merge worktree to main branch
 3. Run integration tests for that feature
-4. If tests pass: proceed to Step 7-8 for that feature
-5. If tests fail: log failure, continue monitoring others
+4. If tests pass: 
+   - **IMMEDIATELY run Step 7 (Risk Assessment + Gate) - BLOCKING**
+   - **IMMEDIATELY run Step 8 (Update Feature Doc state: implemented) - BLOCKING**
+   - **CRITICAL:** State MUST be updated BEFORE checking for next feature
+5. If tests fail: 
+   - Mark feature as failed (add `## Status - Failed` section)
+   - Log failure, continue monitoring others
 
-**After each feature finishes:**
+**After feature state updated (Step 8 complete):**
 1. Check for remaining features with `state: refined`
 2. If found: validate independence from still-running features
    - Check `depends_on`: no dependencies on running features
@@ -161,7 +166,7 @@ Wait for background agents to complete. As each finishes:
 
 **Continue until:** No refined features remain OR all remaining features conflict with running ones.
 
-**Safety:** Continuous independence validation. Each works in isolated worktree, merges sequentially after completion.
+**CRITICAL SAFETY:** Feature state update (Step 8) is BLOCKING before spawning next feature. Prevents duplicate work on same feature.
 
 ### Step 7: Risk Assessment + Spec Gate — Execute
 
@@ -172,7 +177,9 @@ Wait for background agents to complete. As each finishes:
 1. Ensure artifacts exist: feature doc, blast area file, git diff with changes
 2. Invoke `neat-sdd-gate <product>` (auto-detects execute mode based on artifacts)
 
-### Step 8: Update Feature Doc
+### Step 8: Update Feature Doc (CRITICAL - BLOCKING)
+
+**CRITICAL:** This step MUST complete before spawning next feature in Step 6a. Failure to update state immediately can cause duplicate work.
 
 1. **Update feature file:** Update frontmatter `state: implemented`. Append `## Status` section: built date, branch, gate log path (if gates ran: `feature-{goal}-{nn}-{slug}-gates.md`).
 2. **Auto-ingest** (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)):
@@ -184,6 +191,8 @@ Wait for background agents to complete. As each finishes:
 3. **Announce completion**
 
 **Both updates required:** Frontmatter tracks state, Status section provides build metadata.
+
+**Red Flag:** If you're about to check for next feature but haven't updated state yet - STOP.
 
 ### Step 9: Audit Prompt (If Applicable)
 
