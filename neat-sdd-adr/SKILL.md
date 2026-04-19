@@ -14,15 +14,16 @@ description: Use when creating or extracting architectural decisions - standalon
 
 ## Overview
 
-**Modes:** Standalone (conversational) or Extraction (from design spec "Key Decisions")
-
-**Architecture:** Shared utilities. Standalone in main agent, extraction spawns parallel sub-agents.
-**Output:** MADR format in `docs/specs/<product>/adrs/` with shared numbering.
+- **Modes:** Standalone (conversational) or Extraction (from "Key Decisions")
+- **Architecture:** Shared utilities. Standalone in main, extraction spawns parallel sub-agents
+- **Output:** MADR format in `docs/specs/<product>/adrs/`, shared numbering
 
 ## When to Use
 
-**Standalone:** Document decisions without design specs, record past decisions, explore trade-offs.
-**Extraction:** neat-sdd-build integration, backfill from specs, design review.
+| Mode | Use Cases |
+|------|-----------|
+| Standalone | Document without specs, record past decisions, explore trade-offs |
+| Extraction | neat-sdd-build integration, backfill from specs, design review |
 
 ## Quick Reference
 
@@ -35,32 +36,32 @@ description: Use when creating or extracting architectural decisions - standalon
 
 ### Standalone Steps
 
-| Step | What | Agent |
-|------|------|-------|
-| 1 | Setup: paths, specs.md | Main |
-| 2 | Context: query KB | Main → KB |
-| 3 | Converse: ask questions | Main |
-| 4 | Generate: assign #, format MADR | Main |
-| 5 | Review: present, edit | Main |
-| 6 | Save: write, update | Main |
+| Step | What |
+|------|------|
+| 1 | Setup: paths, specs.md |
+| 2 | Context: query KB |
+| 3 | Converse: ask questions |
+| 4 | Generate: assign #, format MADR |
+| 5 | Review: present, edit |
+| 6 | Save: write, update |
 
 ### Extraction Steps
 
-| Step | What | Agent |
-|------|------|-------|
-| 1 | Setup: mode, paths | Main |
-| 2 | Parse: extract Key Decisions | Main |
-| 3 | Filter: check significance | Main |
-| 4 | Confirm: present, approve | Main |
-| 5 | Spawn: parallel (1 per) | Main → Subs |
-| 6 | Extract: check, ask, generate | Subs |
-| 7 | Save: collect, update | Main |
+| Step | What |
+|------|------|
+| 1 | Setup: mode, paths |
+| 2 | Parse: extract Key Decisions |
+| 3 | Filter: check significance |
+| 4 | Confirm: present, approve |
+| 5 | Spawn: parallel (1 per) |
+| 6 | Extract: check, ask, generate |
+| 7 | Save: collect, update |
 
 ## Setup & Mode Detection
 
 **Detect:** No args → Standalone | 2+ args → Extraction
 
-**Setup:** Locate specs.md ([standard procedure](../references/specs-location.md)), extract product name. Set path: `<repo-root>/docs/specs/<product>/adrs/`. Create dir if needed.
+**Setup:** Locate specs.md ([standard procedure](../references/specs-location.md)), extract product. Path: `<repo-root>/docs/specs/<product>/adrs/`.
 
 ## Shared Utilities
 
@@ -70,88 +71,47 @@ description: Use when creating or extracting architectural decisions - standalon
 
 ### Phase 0: Context
 
-Ask topic. Query KB per [knowledge query pattern](../references/output-access.md) with questions like "What architectural decisions, components, constraints, and risks exist related to [topic]?" Agent evaluates and loads relevant ADRs, architectural patterns, domain knowledge. Inform questions/recommendations.
-
-After gathering context, proceed to Phase 1 (Conversation).
+Ask topic. Query KB per [knowledge query pattern](../references/output-access.md): "What decisions, components, constraints, risks for [topic]?" Load relevant context.
 
 ### Phase 1: Conversation
 
-Ask: "What decision?" "What problem?" Check: decision, context, alternatives, rationale, consequences. If missing: "Alternatives?" (suggest), "Why?", "Trade-offs?", "Risks?" Use context to suggest alternatives, identify conflicts, recommend alignment. Stop when all 5 present or "none". See [examples](references/examples.md).
+Ask: "What decision?" "What problem?" Check: decision, context, alternatives, rationale, consequences. Prompt if missing. Suggest alternatives, identify conflicts. See [examples](references/examples.md).
 
 ### Phase 2: Generation
 
-Assign date number (shared utility, `YYYYMMDD` format), filename `adr-{YYYYMMDD}-{slug}.md`. Status: "Accepted"/"Proposed". Enrich with KB. Format per [template](references/template.md). See [examples](references/examples.md).
+Assign date (`YYYYMMDD`), filename `adr-{YYYYMMDD}-{slug}.md`. Status: "Accepted"/"Proposed". Format per [template](references/template.md).
 
 ### Phase 3: Review
 
-Present: "Does this look good?" (yes/edit/no). Edit: ask → update → loop. No: "Canceled."
+Present for approval (yes/edit/no). Edit: ask → update → loop. No: cancel.
 
 ### Phase 4: Save
 
-Get path (create dir if needed), write file (fail → report, exit). Update index.md (sort by date number descending), specs.md (add entry/count). Auto-ingest (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)):
+Write file. Update index.md (sort by date), specs.md. Auto-ingest per [auto KB pattern](../references/neat-knowledge.md): `neat-knowledge-ingest file <adr-path> --category adrs`.
 
-- Check: `test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json && echo "ready" || echo "skip"`
-- If "ready":
-  - Invoke: `neat-knowledge-ingest file <adr-path> --category adrs`
-  - Log: "✓ Indexed ADR in project KB"
-- If "skip": Skip auto-ingest
-
-Report success.
-
-**Errors:** Can't create dir → exit | Write fails → no updates | Index corrupted → backup + fresh
+**Errors:** Can't create dir → exit | Write fails → no updates | Corrupt index → backup + fresh
 
 ## Extraction Mode
 
-Extract from design spec "Key Decisions". Input: `neat-sdd-adr <design-spec-path> <feature-doc-path> <mode>`. Expects `## Key Decisions` with H3 subsections (`### N. Title`).
-
-**Note:** Extraction is always triggered but may result in zero ADRs if no architecturally significant decisions are found. This is valid behavior—not all features require ADRs.
+Extract from `## Key Decisions` (H3 subsections). Input: `neat-sdd-adr <design-spec-path> <feature-doc-path> <mode>`. May yield zero ADRs (valid).
 
 ### Step 1: Parse & Filter
 
-Parse → split by H3 → extract number, title, content. Filter ADR-worthy (multi-component, hard to reverse, trade-offs, non-functionals). Skip local/standard/trivial.
-
-**If significant decisions found:** Confirm: "Detected {N}: Significant ({X}), Uncertain ({Y}), Skipped ({Z}). Generate {X}?" → yes/no/add/remove
-
-**If no significant decisions:** Report: "SUCCESS: Extraction triggered: Analyzed {N} decisions, found 0 architecturally significant" and exit gracefully (this is valid, not an error)
+Parse H3 → extract number, title, content. Filter ADR-worthy (multi-component, hard to reverse, trade-offs, non-functionals). Skip local/trivial. Confirm: "Detected {N}: Significant ({X}), Uncertain ({Y}), Skipped ({Z}). Generate {X}?" → yes/no/add/remove. None = valid.
 
 ### Step 2: Assign Numbers
 
-Use shared utility #1: Use today's date in `YYYYMMDD` format. All ADRs in this batch share the same date number.
-
-**Example:** Creating 3 ADRs on 2026-03-30 → all use `20260330` (different slugs differentiate them).
-
-**Extract feature name:** Parse feature-doc-path pattern `feature-<nn>-<slug>.md` → extract `<slug>` for sub-agent inputs.
+Use today's date (`YYYYMMDD`). All ADRs share date (slugs differentiate). Extract feature from `feature-<nn>-<slug>.md`.
 
 ### Step 3: Spawn Sub-Agents
 
-**Parallel dispatch:**
+**Dispatch:** Extract, generate MADR, save, return metadata. Inputs: title, content, date-number, paths, names. Steps: (1) Check completeness → ask if 2+ missing or 1 + <100 words (2) Filename: `adr-{date-number}-{slug}.md` (3) Generate per [template](references/template.md) (4) Write (5) Return metadata.
 
-```text
-Extract ADR, generate MADR, save, return metadata only.
-
-Inputs: {title}, {content}, {date-number}, {design-spec-path}, {feature-doc-path}, {feature-name}, {product-name}, {output-path}
-
-Steps:
-1. Check: 2+ missing (rationale/alternatives/consequences) OR (1 missing AND <100 words) → ask user
-2. Filename: adr-{date-number}-{slug}.md (YYYYMMDD format)
-3. Generate MADR per [template](references/template.md) (Context from feature+spec, Decision from Key Decisions)
-4. Write {output-path}/adr-{date-number}-{slug}.md
-5. Return: date-number, title, filename (3 lines only)
-```
-
-**Execution:** Spawn ALL in batch (`Agent`, `subagent_type: "general-purpose"`). Wait, collect.
+Spawn ALL (`Agent`, `subagent_type: "general-purpose"`). Collect.
 
 ### Step 4: Collect & Save
 
-Receive metadata (3 lines/ADR). Update index.md (sort by date number descending) and specs.md. Auto-ingest (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)):
-
-- Check: `test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json && echo "ready" || echo "skip"`
-- If "ready":
-  - Invoke: `neat-knowledge-ingest directory docs/specs/<product>/adrs/ --category adrs`
-  - Log: "✓ Indexed {N} ADRs in project KB"
-- If "skip": Skip auto-ingest
-
-Context benefit: ~30 tokens/ADR vs 800-1,200.
+Receive metadata. Update index.md, specs.md. Auto-ingest per [auto KB pattern](../references/neat-knowledge.md): `neat-knowledge-ingest directory docs/specs/<product>/adrs/ --category adrs`. Benefit: ~30 tokens/ADR vs 800-1,200.
 
 ### Error Handling
 
@@ -164,25 +124,14 @@ Context benefit: ~30 tokens/ADR vs 800-1,200.
 
 ### Success
 
-**With ADRs:**
-
-```text
-SUCCESS: Extraction triggered: Analyzed {N} decisions, filtered to {M} significant
-SUCCESS: Generated {M} ADRs: docs/specs/{product}/adrs/adr-{YYYYMMDD}-*.md
-SUCCESS: Index and specs.md updated
-SUCCESS: Indexed in project KB (if neat-knowledge available)
-```
-
-**Without ADRs (valid outcome):**
-
-```text
-SUCCESS: Extraction triggered: Analyzed {N} decisions, found 0 architecturally significant
-INFO: No ADRs generated. All decisions were implementation-specific or trivial.
-```
+| Outcome | Message |
+|---------|---------|
+| With ADRs | "SUCCESS: Extraction triggered: Analyzed {N} decisions, filtered to {M} significant<br>SUCCESS: Generated {M} ADRs: docs/specs/{product}/adrs/adr-{YYYYMMDD}-*.md<br>SUCCESS: Index and specs.md updated<br>SUCCESS: Indexed in project KB (if available)" |
+| No ADRs | "SUCCESS: Extraction triggered: Analyzed {N} decisions, found 0 architecturally significant<br>INFO: No ADRs generated. All decisions were implementation-specific or trivial." |
 
 ## Output
 
-ADRs are saved to `docs/specs/<product>/adrs/` per [output conventions](../references/output-conventions.md). Updated in specs.md Outputs section and KB.
+ADRs saved to `docs/specs/<product>/adrs/` per [output conventions](../references/output-conventions.md). Updated in specs.md and KB.
 
 ## Common Mistakes
 

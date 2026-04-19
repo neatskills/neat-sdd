@@ -4,200 +4,132 @@ When neat-knowledge skills are installed, neat-sdd automatically manages the pro
 
 ## Skill Installation Check
 
-Check if neat-knowledge skills are installed:
-
 ```bash
-# Check both required skills
 test -L ~/.claude/skills/neat-knowledge-ingest && \
 test -L ~/.claude/skills/neat-knowledge-extract && \
 echo "installed" || echo "not-installed"
 ```
 
-**Result:**
-
-- `installed` → Enable automatic KB management
-- `not-installed` → Continue without KB management (neat-sdd works independently)
+Result: `installed` → enable auto KB management; `not-installed` → skip KB operations
 
 ## KB Detection
 
-**Auto-ingest requires an initialized KB.** Users must initialize the KB once by ingesting any content via `/neat-knowledge-ingest`.
+Auto-ingest requires initialized KB. User initializes once by running `/neat-knowledge-ingest <any-file>`, which prompts for location and creates:
+
+- `{KB_PATH}/.index/metadata.json` (metadata)
+- `{KB_PATH}/.index/index.json` (search index)
+- `{KB_PATH}/.index/summaries/` (category summaries)
 
 **Check sequence:**
 
-1. Are neat-knowledge skills installed? (`test -L ~/.claude/skills/neat-knowledge-ingest`)
-   - NO → Skip auto-ingest (neat-sdd works independently)
+1. Are neat-knowledge skills installed?
+2. Does KB path exist in specs.md?
+3. If yes to both: Use for auto-ingestion
+4. If no to either: Skip KB operations
 
-2. Does `docs/knowledge/.index/metadata.json` exist?
-   - YES → KB initialized, proceed to ingestion
-   - NO → Skip auto-ingest, log recommendation
+**Ownership:** Analysis skill detects KB and writes path to specs.md. All downstream skills read path from specs.md (single source of truth).
 
-**One-time KB initialization (user action):**
+## KB Section in specs.md
 
-User runs `/neat-knowledge-ingest <any-file>` once. This prompts for KB location and creates:
+Single source of truth for KB path. Located after `## Commands`, before `## Outputs`.
 
-- docs/knowledge/.index/metadata.json (KB metadata)
-- docs/knowledge/.index/index.json (search index)
-- docs/knowledge/.index/summaries/ (per-category summaries)
+**Format:**
 
-After initialization, all auto-ingest operations work seamlessly.
+| State | Content |
+|-------|---------|
+| Initialized | `**Path:** docs/knowledge/`<br>`**Status:** Initialized (42 documents)` |
+| Not initialized | `**Status:** Not initialized` |
+
+### Detection & Usage
+
+**Detection commands:**
+
+```bash
+# Find KB
+find . -name "metadata.json" -path "*/.index/metadata.json" -type f 2>/dev/null | head -1
+
+# Count documents
+cat <kb-path>/.index/index.json | grep -c '"file_path"'
+```
+
+**Analysis skill workflow:**
+
+1. Run find command to detect KB
+2. If found: Extract KB directory (parent of `.index/`), convert to relative path, count documents
+3. Write specs.md section: `**Path:** {KB_PATH}` + `**Status:** Initialized ({count} documents)`
+4. If not found: Write `**Status:** Not initialized`
+
+**Downstream skills workflow:**
+
+1. Read specs.md, locate `## Knowledge Base` section
+2. Look for `**Path:**` line, extract value
+3. If path exists: Use for ingestion operations
+4. If no path: Skip KB operations, continue normally
 
 ## Automatic Ingestion Points
 
-### After Analysis (neat-sdd-analysis)
+| Skill | Trigger | Path | Category | Notes |
+|-------|---------|------|----------|-------|
+| **neat-sdd-analysis** | After saving analysis + specs | `analysis-<product>.md` | analysis | Detects KB, writes path to specs.md |
+| **neat-sdd-domains** | After domain investigation | `domain-knowledge-{NN}-{name}.md` | domains | Reads KB path from specs.md |
+| **neat-sdd-adr** | After ADR creation | `docs/specs/<product>/adrs/` (directory) | adrs | |
+| **neat-sdd-build** | Feature `state: implemented` | `feature-{goal}-{nn}-{slug}.md` | features | Only implemented features ingested |
 
-**When:** After saving `analysis-<product>.md` and `specs.md`
+### Standard Workflow
 
-**Action:**
+**For Analysis skill:**
 
-```markdown
-Check: neat-knowledge skills installed?
-  Run: test -L ~/.claude/skills/neat-knowledge-ingest && echo "installed" || echo "not-installed"
-  
-If "not-installed":
-  Skip auto-ingest
-  
-If "installed":
-  Check: docs/knowledge/.index/metadata.json exists?
-  
-  If NO:
-    Skip auto-ingest
-    Log: "To enable auto-indexing, initialize KB with: /neat-knowledge-ingest <any-file>"
-    
-  If YES:
-    Invoke Skill tool:
-      skill: neat-knowledge-ingest
-      args: file docs/specs/<product>/analysis-<product>.md --category analysis
-    Log: "✓ Indexed analysis in project KB"
-```
+1. Check installation: `test -L ~/.claude/skills/neat-knowledge-ingest && echo "installed" || echo "not-installed"`
+2. If not installed: Skip auto-ingest, write `**Status:** Not initialized` to specs.md
+3. If installed: Detect KB path via `find` command
+4. If KB found: Write path + count to specs.md, invoke ingest, log success
+5. If KB not found: Write `**Status:** Not initialized`, log initialization hint
 
-### After Domain Investigation (neat-sdd-domains)
+**For downstream skills (domains, adr, build):**
 
-**When:** After saving `domain-knowledge-{NN}-{name}.md`
+1. Check installation
+2. If not installed: Skip
+3. If installed: Read KB path from specs.md `## Knowledge Base` section
+4. If path found: Invoke `neat-knowledge-ingest` with appropriate args, log success
+5. If path not found: Skip
 
-**Action:**
+## Benefits & Fallback
 
-```markdown
-Check: neat-knowledge skills installed AND KB initialized?
-  Run: test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json
-  
-If YES:
-  Invoke Skill tool:
-    skill: neat-knowledge-ingest
-    args: file docs/specs/<product>/domains/domain-knowledge-{NN}-{name}.md --category domains
-  Log: "✓ Indexed domain knowledge in project KB"
-  
-If NO:
-  Skip auto-ingest
-```
-
-### After ADR Creation (neat-sdd-adr)
-
-**When:** After creating ADRs in `docs/specs/<product>/adrs/`
-
-**Action:**
-
-```markdown
-Check: neat-knowledge skills installed AND KB initialized?
-  Run: test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json
-  
-If YES:
-  Invoke Skill tool:
-    skill: neat-knowledge-ingest
-    args: directory docs/specs/<product>/adrs/ --category adrs
-  Log: "✓ Indexed {N} ADRs in project KB"
-  
-If NO:
-  Skip auto-ingest
-```
-
-### After Feature Implementation (neat-sdd-build)
-
-**When:** After updating feature doc to `state: implemented` with `## Status` section
-
-**Action:**
-
-```markdown
-Check: neat-knowledge skills installed AND KB initialized?
-  Run: test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json
-  
-If YES:
-  Invoke Skill tool:
-    skill: neat-knowledge-ingest
-    args: file docs/specs/<product>/features/feature-{goal}-{nn}-{slug}.md --category features
-  Log: "✓ Indexed implemented feature in project KB"
-  
-If NO:
-  Skip auto-ingest
-```
-
-**Why after implementation, not refinement:** The KB should contain actual capabilities (working code), not planned features (specs). Only implemented features are ingested.
-
-## Benefits
-
-**With automatic KB management:**
-
-- Analysis immediately searchable via `neat-knowledge-extract`
-- Domain knowledge available for planning/refinement context
-- ADRs indexed for conflict detection
-- 80-90% context savings in downstream skills (planning, refinement, build)
-
-**Without neat-knowledge:**
-
-- neat-sdd works independently by reading files directly
-- No performance optimization
-- User can install neat-knowledge later and manually ingest content
+**With KB:** Searchable analysis/domains/ADRs, 80-90% context savings in downstream skills.  
+**Without KB:** neat-sdd reads files directly, no optimization. Can install/ingest later.
 
 ## Implementation Pattern
 
-**Standard pattern for all neat-sdd skills that generate content:**
+All content-generating skills follow this pattern:
 
-```markdown
-## Step X: Save and Register
+1. **Save:** Write file to `docs/specs/<product>/<path>`
+2. **Register:** Add to specs.md Outputs section
+3. **Auto-ingest:**
+   - Check if neat-knowledge skills installed
+   - Read KB path from specs.md (or detect for analysis skill)
+   - If path exists: Invoke `neat-knowledge-ingest` with file/directory + category
+   - Log: "Indexed in project KB" or skip reason
 
-1. Save file to docs/specs/<product>/<path>
-2. Register in specs.md Outputs
-3. Auto-ingest (if neat-knowledge available):
+### Error Handling
 
-Check: neat-knowledge skills installed AND KB initialized?
-  Run: test -L ~/.claude/skills/neat-knowledge-ingest && \
-       test -f docs/knowledge/.index/metadata.json && \
-       echo "ready" || echo "skip"
-       
-If "ready":
-  Invoke: neat-knowledge-ingest <args>
-  Log: "✓ Indexed in project KB"
-  
-If "skip":
-  Skip auto-ingest
-  (User can initialize KB with: /neat-knowledge-ingest <any-file>)
-```
+**KB initialization fails:** Log warning, continue without KB, suggest manual installation.
 
-## Error Handling
+**Ingestion fails:** Log warning, continue. File already saved/registered in specs.md. User can ingest manually later.
 
-**If KB initialization fails:**
+**Skills not installed:** Silent skip. neat-sdd operates independently.
 
-- Log warning: "Could not initialize project KB"
-- Continue without KB (neat-sdd works independently)
-- Suggest manual installation
+### User Experience
 
-**If ingestion fails:**
+**With neat-knowledge installed:**
 
-- Log warning: "Could not index in KB"
-- Continue without KB
-- File is still saved and registered in specs.md
-- User can manually ingest later
+- User runs `/neat-knowledge-ingest <any-file>` once to initialize KB
+- All subsequent neat-sdd operations auto-index content
+- Transparent logging confirms operations
+- 80-90% context savings in downstream skills
 
-## User Experience
+**Without neat-knowledge:**
 
-**Seamless integration:**
-
-- User installs neat-knowledge → automatic KB management
-- User doesn't install → neat-sdd works independently
-- No user action required
+- neat-sdd reads files directly
+- No KB optimization
+- Can install neat-knowledge later and manually ingest existing content
 - No failures or blockers
-
-**Transparency:**
-
-- Log messages confirm KB operations
-- User knows content is indexed
-- Clear feedback on what happened
