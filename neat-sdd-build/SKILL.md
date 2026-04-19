@@ -98,7 +98,11 @@ For each prepared feature: spawn agent with worktree isolation (`run_in_backgrou
 Wait for background agents to complete. As each finishes:
 
 1. Retrieve completion status and worktree path
-2. **Simplify in worktree:** Invoke `/simplify`, fix issues, commit (MUST run before merge)
+2. **BLOCKING - Simplify in worktree:** Invoke `/simplify`, fix issues, commit. MUST run before merge. No exceptions:
+   - Don't skip because "code looks clean"
+   - Don't skip because "agent already reviewed"
+   - Don't skip because "simple changes"
+   - Simplify catches: reuse opportunities, quality issues, efficiency problems
 3. Merge worktree to main branch, run integration tests
 4. If tests pass: Run Step 12 (Risk Assessment + Gate), then Step 13 (Update state: implemented). State MUST update BEFORE checking for next feature.
 5. If tests fail: Mark failed, log, continue monitoring others

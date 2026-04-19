@@ -29,6 +29,7 @@
 - Spawn one agent per layer with `isolation: "worktree"`
 - Pass all layer tasks to agent
 - Agent decides execution strategy internally
+- **Always invoke `/simplify` before merging worktree** (catches reuse, quality, efficiency issues)
 - Integration tests after layer completes and worktree merged
 
 ## KB & Code
