@@ -117,11 +117,12 @@ After the investigation completes, proceed to Step 9 (Merge).
 
 1. Register in Outputs ([format](../references/output-conventions.md))
 2. Auto-ingest (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)):
-   - Check: `test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json && echo "ready" || echo "skip"`
-   - If "ready":
+   - Check: `test -L ~/.claude/skills/neat-knowledge-ingest && echo "installed" || echo "not-installed"`
+   - If "installed": Read KB path from specs.md `## Knowledge Base` section
+   - If KB path found:
      - Invoke: `neat-knowledge-ingest file docs/specs/<product>/domains/domain-knowledge-{NN}-{name}.md --category domains`
      - Log: "✓ Indexed domain knowledge in project KB"
-   - If "skip": Skip auto-ingest
+   - Otherwise: Skip auto-ingest
 3. Offer PDF (`neat-util-pdf`)
 4. Recommend `neat-sdd-audit`
 

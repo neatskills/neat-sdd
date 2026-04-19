@@ -56,6 +56,8 @@ Agent evaluates keyword matches and decides loading depth (summary/sections/full
 
 Parse JSON: Extract tech_stack, integrations, components, workflows, business_logic from returned documents.
 
+If invoke fails (neat-knowledge not installed): Fall back to direct reads automatically, log "neat-knowledge not available, using direct reads"
+
 Fallback: Read specs.md, parse KB entries, read analysis directly.
 
 If KB minimal: Use goal only; factual questions become decision questions.

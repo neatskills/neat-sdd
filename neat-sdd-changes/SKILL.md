@@ -112,11 +112,12 @@ Generate curated, audience-appropriate change notes from git commit history. Cat
    - Add per [standard format](../references/output-conventions.md): `- Changes: docs/specs/<product>/changes/<filename>.md`
    - Check for duplicates first
 7. Auto-ingest (if neat-knowledge available, per [auto KB pattern](../references/neat-knowledge.md)):
-   - Check: `test -L ~/.claude/skills/neat-knowledge-ingest && test -f docs/knowledge/.index/metadata.json && echo "ready" || echo "skip"`
-   - If "ready":
+   - Check: `test -L ~/.claude/skills/neat-knowledge-ingest && echo "installed" || echo "not-installed"`
+   - If "installed": Read KB path from specs.md `## Knowledge Base` section
+   - If KB path found:
      - Invoke: `neat-knowledge-ingest file docs/specs/<product>/changes/change-notes-<range>.md --category changes`
      - Log: "✓ Indexed change notes in project KB"
-   - If "skip": Skip auto-ingest
+   - Otherwise: Skip auto-ingest
 8. Done.
 
 ## Guardrails

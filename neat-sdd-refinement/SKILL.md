@@ -54,6 +54,8 @@ Parse: Available domain coverage for precision assessment
 
 Agent evaluates keyword matches and decides loading depth based on ROI.
 
+If invoke fails (neat-knowledge not installed): Fall back to direct reads automatically, log "neat-knowledge not available, using direct reads"
+
 Fallback:
   Read specs.md, parse KB entries
   Read analysis for components, risks sections directly

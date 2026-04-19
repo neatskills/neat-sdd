@@ -24,6 +24,7 @@ Glob `**/docs/specs/*/specs.md` in repo, filter by first-line marker:
 Extract from specs.md:
 
 - Product name
+- KB path (from `## Knowledge Base` section, if present)
 - Knowledge Base entries (Analysis, Domain Knowledge, Features, etc.)
 - Tech stack, architecture, conventions
 
