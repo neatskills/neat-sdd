@@ -1,6 +1,6 @@
 ---
 name: neat-sdd-analysis
-description: Use when analyzing an existing codebase - extracts structured knowledge through layered analysis (L0-L6) before planning and refinement
+description: Use when analyzing an existing codebase - extracts structured knowledge through layered analysis (L0-L6) before planning and build
 ---
 
 # Analysis

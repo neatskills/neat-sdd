@@ -1,6 +1,6 @@
 ---
 name: neat-sdd-gate
-description: Use when verifying implementation alignment against feature specifications - independent AI review checks design specs, plans, or code against feature doc acceptance criteria - requires existing feature docs from refinement
+description: Use when verifying implementation alignment against feature specifications - independent AI review checks design specs, plans, or code against feature doc acceptance criteria - requires existing feature docs from planning
 ---
 
 # Spec Gate
@@ -16,7 +16,7 @@ neat-sdd-gate            # Prompts for product if ambiguous
 
 **Requires:**
 
-- Feature doc with Acceptance Criteria in `docs/specs/<product>/features/` (state: `refined` or `implemented`)
+- Feature doc with Acceptance Criteria in `docs/specs/<product>/features/` (state: `planned` or `implemented`)
 - **Design mode:** Design spec + task list must exist
 - **Execute mode:** Blast area file + git diff with changes must exist
 
@@ -56,7 +56,7 @@ Independent AI review that validates design specs, plans, or code against featur
 3. Select feature, extract criteria
 4. Detect mode automatically:
    - Blast area file exists + git diff shows changes → `execute`
-   - Feature state=refined, no implementation → `design`
+   - Feature state=planned, no implementation → `design`
    - Ambiguous → ask user to clarify
 5. Read artifacts (YOU must read, not just locate):
    - design mode: Read spec + tasks with Read tool

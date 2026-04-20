@@ -13,21 +13,24 @@ Markdown-based skills for spec-driven development. Optimised for [Claude Code](h
 ## Workflow
 
 ```text
-                  Neat SDD - shape                             Neat SDD - build
-┌──────────────────────────────────────────────────┐    ┌──────────────────────────────┐
-│                                                  │    │                              │
-│  analysis → domains → planning → refinement ─────┼────┼─→ feature docs → any agents  │
-│     │           │         │           │          │    │         │                    │
-│     ▼           ▼         ▼           ▼          │    │         ▼                    │
-│ Understand   Deepen   Prioritize   Scope         │    │    plan        [gate]        │
-│ the product  domain   what to do   into          │    │         │                    │
-│              knowledge             features      │    │         ▼                    │
-│                                                  │    │    execute     [gate]        │
-│                                                  │    │         │                    │
-│                                                  │    │         ▼                    │
-│                                                  │    │    audit (after 2+ features) │
-│                                                  │    │                              │
-└──────────────────────────────────────────────────┘    └──────────────────────────────┘
+           Neat SDD - shape                         Neat SDD - build
+┌────────────────────────────────────────┐    ┌──────────────────────────────┐
+│                                        │    │                              │
+│  analysis → domains → planning ────────┼────┼─→ feature docs → any agents  │
+│     │           │         │            │    │         │                    │
+│     ▼           ▼         ▼            │    │         ▼                    │
+│ Understand   Deepen   Decompose        │    │    design      [gate]        │
+│ the product  domain   into features    │    │         │                    │
+│              knowledge with goal,      │    │         ▼                    │
+│                       deps, risks      │    │    plan        [gate]        │
+│                                        │    │         │                    │
+│                                        │    │         ▼                    │
+│                                        │    │    execute     [gate]        │
+│                                        │    │         │                    │
+│                                        │    │         ▼                    │
+│                                        │    │    audit (after 2+ features) │
+│                                        │    │                              │
+└────────────────────────────────────────┘    └──────────────────────────────┘
 
                      Neat SDD - context
               ┌──────────────────────────────────────────────┐
@@ -42,7 +45,7 @@ Markdown-based skills for spec-driven development. Optimised for [Claude Code](h
               └──────────────────────────────────────────────┘
 ```
 
-The pipeline ensures you **understand before you plan, plan before you scope, and scope before you build**.
+The pipeline ensures you **understand before you plan, and plan before you build**.
 
 ## Skills & Roles
 
@@ -51,10 +54,9 @@ Each skill operates with a specific role persona that guides its behavior and ou
 | Skill | Role |
 |-------|------|
 | **neat-sdd-analysis** | Software architect who extracts actionable insights from codebases |
-| **neat-sdd-planning** | Product owner who clarifies ambiguous goals and decomposes them into discrete features |
-| **neat-sdd-refinement** | Tech lead refining planned features into detailed, implementable specifications |
+| **neat-sdd-planning** | Product owner who clarifies ambiguous goals and decomposes them into discrete, build-ready features |
 | **neat-sdd-domains** | Domain expert who builds domain knowledge through code investigation and focused analysis |
-| **neat-sdd-build** | Tech lead who orchestrates feature builds from spec through verified code |
+| **neat-sdd-build** | Tech lead who orchestrates feature builds from design through verified code |
 | **neat-sdd-gate** | QA engineer who verifies implementation alignment against feature specifications |
 | **neat-sdd-audit** | QA engineer who verifies cross-feature integration, coordination, and consistency |
 | **neat-sdd-adr** | Software architect who documents architectural decisions in MADR format |
@@ -68,18 +70,17 @@ A human-in-the-loop funnel — each step produces progressively deeper understan
 
 2. **Domains** (`neat-sdd-domains`) — Builds domain knowledge through focused investigations of specific topics within technical or business domains. Investigates topics through code exploration, analysis synthesis, and domain-specific research that merge into living domain knowledge files. Each domain gets one growing file with Overview, Investigations, and Change Log.
 
-3. **Planning** (`neat-sdd-planning`) — Takes high-level goals or objectives and breaks them down into discrete, prioritized features for refinement. Clarifies ambiguous goals, synthesizes capabilities from product analysis, cross-checks against architecture, and produces feature files ready for refinement.
-
-4. **Refinement** (`neat-sdd-refinement`) — Scans features directory for `state: planned` items and adds detailed acceptance criteria, risks, dependencies, and blast area analysis. Derives technical details from KB and analysis, auto-detects dependencies from component overlap. Produces requirements docs focused on **what** to build, not **how**. Updates features to `state: refined`. (Features are ingested into KB after implementation, not refinement.)
+3. **Planning** (`neat-sdd-planning`) — Takes high-level goals or objectives and breaks them down into discrete, build-ready features. Clarifies ambiguous goals via KB-guided questions, synthesizes capabilities from product analysis, cross-checks against architecture, and automatically derives goal statements, dependencies, and risks for each feature. Produces feature files with `state: planned` ready for build.
 
 ### Build Phase (feature docs → working code)
 
 This is where spec gates kick in. The feature doc produced by refinement becomes the contract, and every transition is verified against it — preventing drift between intent and execution.
 
-**Build** (`neat-sdd-build`) — Orchestrates end-to-end feature implementation from spec through verified code with risk-based gate verification. Requires existing feature docs from refinement. Queries the knowledge base to enrich brainstorming with architectural patterns and domain insights.
+**Build** (`neat-sdd-build`) — Orchestrates end-to-end feature implementation from design through verified code with risk-based gate verification. Requires existing feature docs from planning. Queries the knowledge base to enrich brainstorming with architectural patterns and domain insights.
 
-- **Readiness check** → evaluates doc quality (acceptance criteria, blast area, risks, goal coverage), discovers blast area files
-- **Brainstorming** → queries KB for patterns and domain knowledge, reads code in blast area, produces design spec
+- **Readiness check** → evaluates doc quality (components, risks, goal), discovers blast area files
+- **Brainstorming** → queries KB for patterns and domain knowledge, reads code in blast area, produces design spec AND derives acceptance criteria from chosen design approach
+- **Update feature doc** → adds designed date, spec_doc path, and acceptance criteria to feature file
 - **Writing Plans** → breaks design into TDD implementation tasks with exact file paths, splits if >15 tasks
 - **Risk Assessment + Plan Gate** → analyzes design complexity (task count, keywords, dependencies, blast area size) and runs gate if medium/high risk to verify design spec + task plan together
 - **Execute** → produces working code via grouped parallel, subagent-driven, or inline execution

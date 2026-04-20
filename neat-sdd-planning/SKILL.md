@@ -11,11 +11,11 @@ description: Use when user has a high-level goal or objective that needs to be b
 
 ## Overview
 
-Decomposes goals into refinable features via KB-guided clarification and architecture validation.
+Decomposes goals into build-ready features via KB-guided clarification, architecture validation, and automated requirements derivation.
 
 ## When to Use
 
-Use when goals need decomposition before refinement. Not for detailed specs or implementation.
+Use when goals need decomposition into features ready for build. Not for detailed design or implementation.
 
 ## Quick Reference
 
@@ -26,7 +26,8 @@ Use when goals need decomposition before refinement. Not for detailed specs or i
 | 3 | Synthesize capabilities from goal (5-15 features) |
 | 4 | Cross-check against architecture → identify components, type, risks |
 | 5 | Present features, iterate on feedback |
-| 6 | Derive goal identifier, save as `feature-{goal}-{nn}-{slug}.md` with `state: planned`, update specs.md KB |
+| 6 | For each feature: derive goal statement, auto-detect dependencies, extract risks |
+| 7 | Derive goal identifier, save as `feature-{goal}-{nn}-{slug}.md` with `state: planned`, update specs.md KB |
 
 ## Setup
 
@@ -40,7 +41,8 @@ Use when goals need decomposition before refinement. Not for detailed specs or i
 2. Generate clarifying questions, query KB for factual answers, ask user for decisions
 3. Synthesize capabilities from goal, cross-check against architecture
 4. Present features with component mapping and risks, iterate on feedback
-5. Save to `features/<slug>.md`, update specs.md KB
+5. For each feature: derive goal statement, auto-detect dependencies, extract risks from KB
+6. Save to `features/<slug>.md`, update specs.md KB
 
 ### Step 1: Load Context Overview
 
@@ -80,7 +82,20 @@ If KB minimal: Use goal only; factual questions become decision questions.
 
 Show: Name, brief description, components affected, type, risks. Iterate on feedback until approved.
 
-### Step 5: Save and Update
+### Step 5: Derive Requirements Per Feature
+
+For each approved feature:
+
+**Goal statement (automatable):** Derive one-sentence outcome from feature name and description. Pattern: "Users can {action} via {mechanism}" or "{System} enables {capability}".
+
+**Auto-detect dependencies:** Parse components from all features in this planning session. For each feature, check if its components depend on infrastructure from other features:
+- Query KB: "What infrastructure does {component} require?"
+- Cross-reference: Which other features provide that infrastructure?
+- Create depends_on list with feature identifiers
+
+**Extract risks from KB:** Query KB with "What are known risks for {components}?" Extract relevant risks from analysis. If none found, use "None identified from KB."
+
+### Step 6: Save and Update
 
 **Derive goal identifier:** Extract 1-3 key terms from user's goal, create slug (lowercase, hyphens, max 20 chars).
 
@@ -99,7 +114,7 @@ Show: Name, brief description, components affected, type, risks. Iterate on feed
 - Features: docs/specs/<product>/features/ (8 features)
 ```
 
-**Recommend next step:** Suggest `neat-sdd-refinement` for detailed acceptance criteria.
+**Recommend next step:** Suggest `neat-sdd-build` to design and implement features. Build will derive detailed acceptance criteria during design phase.
 
 ## Common Mistakes
 
@@ -109,7 +124,8 @@ Show: Name, brief description, components affected, type, risks. Iterate on feed
 | Asking factual questions | Query KB for facts, ask user for decisions |
 | Wrong granularity | 5-15 capabilities with user value |
 | Skipping architecture cross-check | Must identify components, type, risks |
-| Not deriving goal identifier | Derive from user's goal in Step 5 |
+| Not deriving goal identifier | Derive from user's goal in Step 6 |
+| Skipping requirements derivation | Must derive goal statements, dependencies, risks in Step 5 |
 
 ## Output
 
@@ -123,6 +139,7 @@ name: Feature Name
 goal: goal-identifier
 state: planned
 created: YYYY-MM-DD
+depends_on: [feature-id-1, feature-id-2]  # If dependencies detected
 ---
 
 # Feature Name
@@ -131,11 +148,9 @@ Brief 1-2 sentence description.
 
 ## Goal
 
-(To be added in refinement)
+One-sentence outcome statement derived from feature description.
 
-## Blast Area
-
-> Initial assessment from planning. Refinement adds precision levels (High/Medium/Low) as first line.
+## Components Affected
 
 **Components affected:** component-a, component-b
 
@@ -143,15 +158,13 @@ Brief 1-2 sentence description.
 
 **Cross-repo format (if applicable):** `[repo-name] component-name`
 
-**Format contract:** Planning provides components list and type. Refinement prepends precision blockquote (`> Precision: Level (source)`).
-
 ## Acceptance Criteria
 
-(To be added in refinement)
+(To be derived during design phase in Build)
 
 ## Risks
 
-[Description of risks, if any]
+[Risks extracted from KB, or "None identified from KB"]
 ```
 
 **Naming:**
@@ -162,6 +175,6 @@ Brief 1-2 sentence description.
 
 **Terminology standard:**
 
-- **Section heading:** `## Blast Area` (always capitalized)
+- **Section heading:** `## Components Affected` (always capitalized)
 - **Field label:** `**Components affected:**` (bold with colon)
-- **Inline reference:** "blast area" (lowercase) or "Blast Area section" (when referring to specific section)
+- **Inline reference:** "components" or "blast area" (lowercase)

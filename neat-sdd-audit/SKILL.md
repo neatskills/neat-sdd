@@ -11,7 +11,7 @@ description: Use when multiple features are implemented and need cross-feature v
 
 **Requires:** Multiple features with `state: implemented` in `docs/specs/<product>/features/`
 
-**Not for:** Single feature verification (use `neat-sdd-gate`), documentation consistency during refinement (use `neat-sdd-refinement`)
+**Not for:** Single feature verification (use `neat-sdd-gate`), pre-implementation planning (use `neat-sdd-planning`)
 
 ## Overview
 
@@ -23,7 +23,7 @@ Verifies cross-feature integration: dependency integration, blast area coordinat
 
 Run AFTER implementation when features have `depends_on` or overlapping blast areas, batch completes, or before milestones.
 
-**Don't use for:** Single feature (`neat-sdd-gate`), doc checks (`neat-sdd-refinement`), or pre-implementation.
+**Don't use for:** Single feature (`neat-sdd-gate`), pre-implementation planning (`neat-sdd-planning`).
 
 ## Quick Reference
 

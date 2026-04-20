@@ -7,7 +7,7 @@
 
 ## Readiness
 
-- If low → refinement
+- If low → return to planning
 - Verify entry criteria
 
 ## Workflow

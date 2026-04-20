@@ -2,7 +2,7 @@
 
 After feature selection, detect state and resume from appropriate step.
 
-**Prerequisite:** Feature must have `state: refined` in frontmatter (set by refinement skill).
+**Prerequisite:** Feature must have `state: planned` in frontmatter (set by planning skill).
 
 ## Extract Feature Identifier
 

@@ -1,6 +1,6 @@
 ---
 name: neat-sdd-build
-description: Use when building a refined feature end-to-end - orchestrates design, planning, and implementation with spec gate verification - requires existing feature docs from refinement
+description: Use when building a planned feature end-to-end - orchestrates design, planning, and implementation with spec gate verification - requires existing feature docs from planning
 ---
 
 # Build
@@ -15,7 +15,7 @@ Orchestrates continuous parallel builds: readiness → brainstorming → ADR ext
 
 ## When to Use
 
-After refining features with `neat-sdd-refinement` for end-to-end execution with verification where implementation traces to feature doc.
+After planning features with `neat-sdd-planning` for end-to-end execution with verification where implementation traces to feature doc.
 
 **Not for:** Standalone implementation (use superpowers directly)
 
@@ -41,7 +41,7 @@ After refining features with `neat-sdd-refinement` for end-to-end execution with
 
 ## Setup
 
-Locate specs.md ([procedure](../references/specs-location.md)), construct output path ([rules](../references/output-conventions.md)), read features with `state: refined` (no `## Status`).
+Locate specs.md ([procedure](../references/specs-location.md)), construct output path ([rules](../references/output-conventions.md)), read features with `state: planned` (no `## Status`).
 
 **Feature state:** `state: implemented` = code complete + verified. Build updates frontmatter + appends `## Status`.
 
@@ -61,7 +61,7 @@ Per [State Detection Algorithm](references/state-detection.md). `## Status` → 
 
 **Prerequisites:** Must NOT have `## Status`. Validate `depends_on` features exist. Missing → STOP, recommend `neat-sdd-audit`.
 
-**Doc Quality:** Score acceptance criteria (testable), blast area (precision), risks (identified), goal (one-sentence). 4/4=High, 2-3/4=Medium, 0-1/4=Low. High/Medium → Step 4. Low → refinement.
+**Doc Quality:** Score components (identified), risks (extracted), goal (one-sentence). 3/3=High, 2/3=Medium, 0-1/3=Low. High/Medium → Step 4. Low → return to planning.
 
 ### Step 4: Discover Blast Area Files
 
@@ -71,7 +71,14 @@ Parse components → keywords → search → rank → confirm.
 
 **Load KB:** Read specs.md KB section. If found: invoke `neat-knowledge-extract` with blast area questions (fallback: direct reads). If NO KB: read specs.md, parse entries, read files.
 
-**Invoke:** Pass "Use neat-knowledge-extract for queries. Check KB BEFORE asking user." Invoke `/brainstorming` with feature doc, specs.md, KB context, blast area. Output: `docs/superpowers/specs/`. Proceed to Step 6.
+**Invoke:** Pass "Use neat-knowledge-extract for queries. Check KB BEFORE asking user. After designing the implementation approach, derive detailed acceptance criteria that reflect your chosen design decisions." Invoke `/brainstorming` with feature doc (goal, components, risks from planning), specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
+
+**After brainstorming completes:** Update feature doc with:
+- `designed: YYYY-MM-DD` (frontmatter)
+- `spec_doc: path/to/design.md` (frontmatter)
+- Acceptance criteria section (from design decisions)
+
+Proceed to Step 6.
 
 ### Step 6: Extract ADRs
 
@@ -109,12 +116,12 @@ Wait for background agents to complete. As each finishes:
 
 **After Step 13 complete:**
 
-1. Check for remaining `state: refined` features
+1. Check for remaining `state: planned` features
 2. Validate independence from running features (depends_on, blast areas, task plans)
 3. If independent: run Steps 3-9, spawn at Step 10 immediately
 4. If conflicts: wait for next completion
 
-**Continue until:** No refined features remain OR all conflict with running ones.
+**Continue until:** No planned features remain OR all conflict with running ones.
 
 ### Step 12: Risk Assessment + Spec Gate — Execute
 
