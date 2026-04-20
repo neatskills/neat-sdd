@@ -1,13 +1,13 @@
 ---
 name: neat-sdd-planning
-description: Use when user has a high-level goal or objective that needs to be broken down into discrete features for refinement
+description: Use when user has a high-level goal or objective that needs to be broken down into discrete features for build
 ---
 
 # Planning
 
-**Role:** You are a product owner who clarifies ambiguous goals and decomposes them into discrete, refinable features.
+**Role:** You are a product owner who clarifies ambiguous goals and decomposes them into discrete, build-ready features.
 
-**Core principle:** Clarify before decomposing. Detailed evaluation happens in refinement.
+**Core principle:** Clarify before decomposing. Detailed acceptance criteria derived during build's design phase.
 
 ## Overview
 
@@ -15,7 +15,7 @@ Decomposes goals into build-ready features via KB-guided clarification, architec
 
 ## When to Use
 
-Use when goals need decomposition into features ready for build. Not for detailed design or implementation.
+Goals need decomposition into build-ready features. Not for design or implementation.
 
 ## Quick Reference
 
@@ -31,90 +31,76 @@ Use when goals need decomposition into features ready for build. Not for detaile
 
 ## Setup
 
-1. **Locate specs.md** ([procedure](../references/specs-location.md))
-2. **Construct output path** ([rules](../references/output-conventions.md))
-3. If Plan entry exists in KB, ask "Update existing plan or start fresh?"
+1. Locate specs.md ([procedure](../references/specs-location.md))
+2. Construct output path ([rules](../references/output-conventions.md))
+3. Plan in KB? Ask "Update or fresh?"
 
 ## Process
 
-1. Query KB for overview (structured index) per [knowledge query pattern](../references/output-access.md)
-2. Generate clarifying questions, query KB for factual answers, ask user for decisions
-3. Synthesize capabilities from goal, cross-check against architecture
-4. Present features with component mapping and risks, iterate on feedback
-5. For each feature: derive goal statement, auto-detect dependencies, extract risks from KB
-6. Save to `features/<slug>.md`, update specs.md KB
+1. Query KB overview per [pattern](../references/output-access.md)
+2. Generate questions → query KB factual → ask user decisions
+3. Synthesize capabilities, cross-check architecture
+4. Present features with components/risks, iterate
+5. Per feature: derive goal, auto-detect dependencies, extract risks
+6. Save `features/<slug>.md`, update specs.md KB
 
-### Step 1: Load Context Overview
+### Step 1: Load Context
 
-Query KB per [knowledge query pattern](../references/output-access.md):
-
-Agent-driven discovery:
+Query KB per [pattern](../references/output-access.md):
 
 ```markdown
-Invoke: neat-knowledge-extract "What is the tech stack, integrations, architectural components, main workflows, and business logic?"
+Invoke: neat-knowledge-extract "What is tech stack, integrations, components, workflows, business logic?"
 ```
 
-Agent evaluates keyword matches and decides loading depth (summary/sections/full based on ROI).
+Agent evaluates matches, decides depth (summary/sections/full). Parse JSON: extract tech_stack, integrations, components, workflows, business_logic.
 
-Parse JSON: Extract tech_stack, integrations, components, workflows, business_logic from returned documents.
+Fails → fallback to direct reads, log "neat-knowledge not available, using direct reads"
 
-If invoke fails (neat-knowledge not installed): Fall back to direct reads automatically, log "neat-knowledge not available, using direct reads"
+**Fallback:** Read specs.md, parse KB, read analysis.
 
-Fallback: Read specs.md, parse KB entries, read analysis directly.
+KB minimal → use goal only; factual → decision questions.
 
-If KB minimal: Use goal only; factual questions become decision questions.
+### Step 2: Clarify (REQUIRED Before Step 3)
 
-### Step 2: Clarify (Required Before Step 3)
+**Generate:** 2-5 questions (scope, users, integration, constraints, priorities). Categorize: **Factual** (KB) or **Decision** (user).
 
-**Generate questions:** List 2-5 questions about ambiguities (scope, users, integration, constraints, priorities). Categorize: **Factual** (KB) or **Decision** (user).
+**Query KB factual:** Per [pattern](../references/output-access.md) with citations. Example: "Real-time support?" → "What workflows/patterns support real-time?" Agent loads analysis + domain knowledge, synthesizes.
 
-**Query KB for factual answers:** Query KB per [knowledge query pattern](../references/output-access.md) with explanations and citations. Example: "Does system support real-time?" → Query "What workflows and integration patterns support real-time operations?" Agent evaluates and loads relevant analysis sections + domain knowledge, synthesize with citations.
+Fails → fallback, log "neat-knowledge not available, using direct reads"
 
-**Ask user decision questions:** Present only questions KB cannot answer (priorities, permissions, strategic choices).
+**Ask user:** Only decisions KB can't answer (priorities, permissions, strategy).
 
-### Step 3: Decompose and Cross-Check
+### Step 3: Decompose & Cross-Check
 
-**Synthesize capabilities:** Break goal into functional capabilities (user-centric, independently refinable, clear value). Aim for 5-15 features. Avoid technical layers or vague goals.
+**Synthesize:** Functional capabilities (user-centric, independent, clear value). 5-15 features. Avoid layers/vague goals.
 
-**Cross-check against architecture:** For each feature, identify components affected (from architectural components in KB), type (Incremental/Transformative), risks (blast radius, conflicts, ordering). Query KB for deeper understanding if needed with specific questions about component relationships or integration patterns.
+**Cross-check:** Per feature: components (from KB), type (Incremental/Transformative), risks (blast radius, conflicts, ordering). Query KB for relationships/patterns.
 
-### Step 4: Present and Iterate
+### Step 4: Present & Iterate
 
-Show: Name, brief description, components affected, type, risks. Iterate on feedback until approved.
+Show: Name, description, components, type, risks. Iterate until approved.
 
-### Step 5: Derive Requirements Per Feature
+### Step 5: Derive Requirements
 
-For each approved feature:
+Per approved feature:
 
-**Goal statement (automatable):** Derive one-sentence outcome from feature name and description. Pattern: "Users can {action} via {mechanism}" or "{System} enables {capability}".
+**Goal:** One-sentence outcome. Pattern: "Users can {action} via {mechanism}" or "{System} enables {capability}".
 
-**Auto-detect dependencies:** Parse components from all features in this planning session. For each feature, check if its components depend on infrastructure from other features:
-- Query KB: "What infrastructure does {component} require?"
-- Cross-reference: Which other features provide that infrastructure?
-- Create depends_on list with feature identifiers
+**Dependencies:** Parse components from all features. Per feature: Query KB "What infrastructure does {component} require?" → cross-reference features → create depends_on list.
 
-**Extract risks from KB:** Query KB with "What are known risks for {components}?" Extract relevant risks from analysis. If none found, use "None identified from KB."
+**Risks:** Query "What are known risks for {components}?" Extract from analysis. None → "None identified from KB."
 
-### Step 6: Save and Update
+### Step 6: Save & Update
 
-**Derive goal identifier:** Extract 1-3 key terms from user's goal, create slug (lowercase, hyphens, max 20 chars).
+**Goal identifier:** 1-3 key terms (lowercase, hyphens, max 20 chars).
 
-**Examples:**
+Examples: "Implement OAuth" → `auth`, "Real-time editing" → `realtime-collab`, "API v2 GraphQL" → `api-v2`, "Migrate microservices" → `microservices`
 
-- "Implement OAuth authentication system" → `auth`
-- "Add real-time collaborative editing" → `realtime-collab`
-- "Build API v2 with GraphQL" → `api-v2`
-- "Migrate to microservices architecture" → `microservices`
+**Save:** `docs/specs/<product>/features/feature-{goal}-{nn}-{slug}.md` (two-digit numbers, scoped per goal).
 
-**Save feature docs:** Create `docs/specs/<product>/features/feature-{goal}-{nn}-{slug}.md` using format below. Use two-digit numbers (01, 02, etc.) scoped per goal identifier (each goal starts numbering at 01).
+**Update specs.md:** `- Features: docs/specs/<product>/features/ (8 features)` per [format](../references/output-conventions.md)
 
-**Update specs.md Outputs:** Add Features entry per [standard format](../references/output-conventions.md):
-
-```markdown
-- Features: docs/specs/<product>/features/ (8 features)
-```
-
-**Recommend next step:** Suggest `neat-sdd-build` to design and implement features. Build will derive detailed acceptance criteria during design phase.
+**Recommend:** `neat-sdd-build` for design/implementation. Build derives acceptance criteria during design.
 
 ## Common Mistakes
 
@@ -160,7 +146,7 @@ One-sentence outcome statement derived from feature description.
 
 ## Acceptance Criteria
 
-(To be derived during design phase in Build)
+(Derived during design phase - see Build skill Step 5)
 
 ## Risks
 
@@ -178,3 +164,5 @@ One-sentence outcome statement derived from feature description.
 - **Section heading:** `## Components Affected` (always capitalized)
 - **Field label:** `**Components affected:**` (bold with colon)
 - **Inline reference:** "components" or "blast area" (lowercase)
+
+**Note:** Build skill adds `designed: YYYY-MM-DD` and `spec_doc: path` to frontmatter during Step 5.

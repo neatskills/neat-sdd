@@ -15,9 +15,9 @@ Orchestrates continuous parallel builds: readiness → brainstorming → ADR ext
 
 ## When to Use
 
-After planning features with `neat-sdd-planning` for end-to-end execution with verification where implementation traces to feature doc.
+After `neat-sdd-planning` for end-to-end execution with verification. Implementation traces to feature doc.
 
-**Not for:** Standalone implementation (use superpowers directly)
+**Not for:** Standalone implementation (use superpowers)
 
 ## Quick Reference
 
@@ -49,9 +49,9 @@ Locate specs.md ([procedure](../references/specs-location.md)), construct output
 
 ### Step 1: Pick Feature(s) (BLOCKING)
 
-Present features with entry criteria. User selects 1+ features to build.
+Present features with entry criteria. User selects 1+ features.
 
-**Independence Validation:** Check `depends_on`, blast areas, task plans for conflicts. If conflicts: present details, ask user to adjust. If independent: proceed with batch workflow (isolated worktrees).
+**Independence Validation:** Check `depends_on`, blast areas, task plans. Conflicts → present, ask adjust. Independent → batch workflow (worktrees).
 
 ### Step 2: Automatic State Detection
 
@@ -59,9 +59,9 @@ Per [State Detection Algorithm](references/state-detection.md). `## Status` → 
 
 ### Step 3: Readiness Check
 
-**Prerequisites:** Must NOT have `## Status`. Validate `depends_on` features exist. Missing → STOP, recommend `neat-sdd-audit`.
+**Prerequisites:** NO `## Status`. Validate `depends_on` features exist. Missing → STOP, recommend audit.
 
-**Doc Quality:** Score components (identified), risks (extracted), goal (one-sentence). 3/3=High, 2/3=Medium, 0-1/3=Low. High/Medium → Step 4. Low → return to planning.
+**Doc Quality:** Score components, risks, goal. 3/3=High, 2/3=Medium, 0-1/3=Low. High/Medium → Step 4. Low → planning.
 
 ### Step 4: Discover Blast Area Files
 
@@ -69,16 +69,11 @@ Parse components → keywords → search → rank → confirm.
 
 ### Step 5: Brainstorming
 
-**Load KB:** Read specs.md KB section. If found: invoke `neat-knowledge-extract` with blast area questions (fallback: direct reads). If NO KB: read specs.md, parse entries, read files.
+**Load KB:** Read specs.md KB. Found → invoke `neat-knowledge-extract` with blast area questions (fallback: direct reads). NO KB → read specs.md, parse, read files.
 
-**Invoke:** Pass "Use neat-knowledge-extract for queries. Check KB BEFORE asking user. After designing the implementation approach, derive detailed acceptance criteria that reflect your chosen design decisions." Invoke `/brainstorming` with feature doc (goal, components, risks from planning), specs.md, KB context, blast area. Output: `docs/superpowers/specs/`.
+**Invoke:** `/brainstorming` with: "Use neat-knowledge-extract for queries. Check KB BEFORE asking. Derive detailed acceptance criteria from design decisions." Inputs: feature doc (goal, components, risks), specs.md, KB, blast area. Output: `docs/superpowers/specs/`.
 
-**After brainstorming completes:** Update feature doc with:
-- `designed: YYYY-MM-DD` (frontmatter)
-- `spec_doc: path/to/design.md` (frontmatter)
-- Acceptance criteria section (from design decisions)
-
-Proceed to Step 6.
+**After:** Update feature doc: `designed: YYYY-MM-DD`, `spec_doc: path`, acceptance criteria section. → Step 6.
 
 ### Step 6: Extract ADRs
 
@@ -90,66 +85,62 @@ Invoke `/writing-plans` with design spec and feature doc. Output: `docs/superpow
 
 ### Step 8: Dependency Analysis
 
-Per [Dependency Analysis Algorithm](references/dependency-analysis.md): Count tasks, build dependency graph, identify layers, present breakdown.
+Per [algorithm](references/dependency-analysis.md): Count tasks, build graph, identify layers, present breakdown.
 
-### Step 9: Risk Assessment + Spec Gate — Design + Plan
+### Step 9: Risk Assessment + Gate — Design + Plan
 
-Analyze design complexity per [risk assessment algorithm](references/risk-assessment.md#design-phase-assessment). If gate runs: ensure artifacts exist, invoke `neat-sdd-gate <product>` (auto-detects design mode).
+Analyze complexity per [algorithm](references/risk-assessment.md#design-phase-assessment). Gate runs → ensure artifacts, invoke `neat-sdd-gate <product>` (auto-detects design).
 
-### Step 10: Spawn Execution Agents
+### Step 10: Spawn Agents
 
-For each prepared feature: spawn agent with worktree isolation (`run_in_background: true`), pass layer-by-layer tasks + docs, track feature→agent→worktree. After all spawned, continue immediately to Step 11. See [Parallel Execution Reference](references/parallel-execution.md).
+Per feature: spawn with worktree isolation (`run_in_background: true`), pass tasks + docs, track feature→agent→worktree. After all spawned → Step 11. See [reference](references/parallel-execution.md).
 
-### Step 11: Monitor Completion & Dynamic Queuing
+### Step 11: Monitor & Queue
 
-Wait for background agents to complete. As each finishes:
+Wait for agents. Per completion:
 
-1. Retrieve completion status and worktree path
-2. **BLOCKING - Simplify in worktree:** Invoke `/simplify`, fix issues, commit. MUST run before merge. No exceptions:
-   - Don't skip because "code looks clean"
-   - Don't skip because "agent already reviewed"
-   - Don't skip because "simple changes"
-   - Simplify catches: reuse opportunities, quality issues, efficiency problems
-3. Merge worktree to main branch, run integration tests
-4. If tests pass: Run Step 12 (Risk Assessment + Gate), then Step 13 (Update state: implemented). State MUST update BEFORE checking for next feature.
-5. If tests fail: Mark failed, log, continue monitoring others
+1. Retrieve status, worktree path
+2. **BLOCKING:** `/simplify` in worktree, fix, commit. MUST run before merge. No exceptions (code looks clean, agent reviewed, simple changes). Catches: reuse, quality, efficiency.
+3. Merge to main, run tests
+4. Tests pass → Step 12 (Risk + Gate) → Step 13 (state: implemented). State MUST update BEFORE next.
+5. Tests fail → mark, log, continue
 
-**After Step 13 complete:**
+**After Step 13:**
 
-1. Check for remaining `state: planned` features
-2. Validate independence from running features (depends_on, blast areas, task plans)
-3. If independent: run Steps 3-9, spawn at Step 10 immediately
-4. If conflicts: wait for next completion
+1. Check `state: planned` features
+2. Validate independence (depends_on, blast areas, plans)
+3. Independent → Steps 3-9, spawn Step 10
+4. Conflicts → wait
 
-**Continue until:** No planned features remain OR all conflict with running ones.
+**Until:** No planned OR all conflict.
 
-### Step 12: Risk Assessment + Spec Gate — Execute
+### Step 12: Risk Assessment + Gate — Execute
 
-Analyze implementation complexity per [risk assessment algorithm](references/risk-assessment.md#execute-phase-assessment). If gate runs: ensure artifacts exist, invoke `neat-sdd-gate <product>` (auto-detects execute mode).
+Analyze per [algorithm](references/risk-assessment.md#execute-phase-assessment). Gate → ensure artifacts, invoke `neat-sdd-gate <product>` (auto-detects execute).
 
-### Step 13: Update Feature Doc (CRITICAL - BLOCKING)
+### Step 13: Update Doc (CRITICAL - BLOCKING)
 
-MUST complete before spawning next feature.
+MUST complete before next spawn.
 
-1. Set `state: implemented`, append `## Status` section
-2. Auto-ingest: if neat-knowledge-ingest installed + KB exists, invoke, log success
-3. Announce completion
+1. Set `state: implemented`, append `## Status`
+2. Auto-ingest: if installed + KB exists, invoke, log
+3. Announce
 
-**Red Flag:** Checking for next feature before updating state - STOP.
+**Red Flag:** Next check before state update - STOP.
 
-### Step 14: Audit Prompt (If Applicable)
+### Step 14: Audit Prompt
 
-If 2+ implemented features AND current has `depends_on` or overlaps: prompt "Run audit? Y/n". If Y: invoke `neat-sdd-audit`.
+2+ implemented AND (`depends_on` OR overlaps) → prompt "Run audit? Y/n". Y → invoke `neat-sdd-audit`.
 
 ### Step 15: Completion
 
-Announce: "All features built."
+"All features built."
 
 ## Gate Handling
 
-Gates run if risk assessment determines medium/high risk. Low-risk skip with logged reasoning. If issues arise, manually invoke `neat-sdd-gate <product>`.
+Gates run if medium/high risk. Low-risk → skip, log. Issues → manually invoke `neat-sdd-gate <product>`.
 
-**On failure:** Present findings, ask: "Fix plan | Fix design | Accept as-is | Abort". Max 3 attempts. If wrong criteria revealed, surface, update if approved, re-run.
+**Failure:** "Fix plan | Fix design | Accept | Abort". Max 3. Wrong criteria → surface, update if approved, re-run.
 
 ## Common Mistakes
 

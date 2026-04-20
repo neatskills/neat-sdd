@@ -24,7 +24,11 @@ neat-sdd-gate            # Prompts for product if ambiguous
 
 Independent AI review that validates design specs, plans, or code against feature doc acceptance criteria. Runs in design mode (after brainstorming) or execute mode (after implementation).
 
-**Note:** When invoked by `neat-sdd-build`, risk assessment determines if the gate runs (medium/high-risk features only). Low-risk features skip gates. Standalone invocation always runs the gate regardless of risk level.
+## Risk Assessment
+
+**Build-invoked gates:** Risk assessment determines if the gate runs. Medium/high-risk features get verified; low-risk features skip gates with logged reasoning.
+
+**Standalone invocation:** Always runs the gate regardless of risk level.
 
 ## When to Use
 

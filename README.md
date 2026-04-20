@@ -74,7 +74,7 @@ A human-in-the-loop funnel — each step produces progressively deeper understan
 
 ### Build Phase (feature docs → working code)
 
-This is where spec gates kick in. The feature doc produced by refinement becomes the contract, and every transition is verified against it — preventing drift between intent and execution.
+This is where spec gates kick in. The feature doc from planning, enriched with acceptance criteria during design, becomes the contract, and every transition is verified against it — preventing drift between intent and execution.
 
 **Build** (`neat-sdd-build`) — Orchestrates end-to-end feature implementation from design through verified code with risk-based gate verification. Requires existing feature docs from planning. Queries the knowledge base to enrich brainstorming with architectural patterns and domain insights.
 

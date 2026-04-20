@@ -15,15 +15,15 @@ description: Use when multiple features are implemented and need cross-feature v
 
 ## Overview
 
-Verifies cross-feature integration: dependency integration, blast area coordination, implementation gaps, pattern consistency. Produces severity-ranked findings (ERROR/WARNING/INFO).
+Cross-feature integration verification: dependency integration, blast area coordination, implementation gaps, pattern consistency. Severity-ranked findings (ERROR/WARNING/INFO).
 
-**Scope:** `neat-sdd-gate` checks single feature; `neat-sdd-audit` checks multi-feature integration.
+**Scope:** Single feature → `neat-sdd-gate`; Multi-feature → `neat-sdd-audit`
 
 ## When to Use
 
-Run AFTER implementation when features have `depends_on` or overlapping blast areas, batch completes, or before milestones.
+After implementation when: features have `depends_on`, overlapping blast areas, batch completes, before milestones.
 
-**Don't use for:** Single feature (`neat-sdd-gate`), pre-implementation planning (`neat-sdd-planning`).
+**Not for:** Single feature (`neat-sdd-gate`), pre-implementation (`neat-sdd-planning`).
 
 ## Quick Reference
 
@@ -47,28 +47,23 @@ All severities are advisory - user decides whether to address.
 
 ## Setup
 
-1. **Locate specs.md** per [standard procedure](../references/specs-location.md). Read Outputs section for features path.
-2. **Glob features:** Find all `feature-*.md` files. If none with `state: implemented` → **STOP:** "No implemented features found. Audit requires implemented features."
-3. **Load feature data:** For each implemented feature, read:
-   - Frontmatter: name, goal, state, depends_on
-   - Blast Area: components, precision
-   - Acceptance Criteria
-4. **Determine applicable checks:** Based on feature data, decide which checks apply (see Checks section)
-5. **Construct output path** per [output path rules](../references/output-conventions.md)
+1. Locate specs.md ([procedure](../references/specs-location.md)), read Outputs for features path
+2. Glob `feature-*.md`. If no `state: implemented` → STOP: "No implemented features found"
+3. Load per feature: frontmatter (name, goal, state, depends_on), blast area (components, precision), acceptance criteria
+4. Determine applicable checks (see Checks)
+5. Construct output path ([rules](../references/output-conventions.md))
 
 ## Checks
 
-Run all checks whose inputs exist. Skip others and note in report.
+Run all checks with available inputs. Skip others, note in report.
 
 ### Check 1: Dependency Integration Verification
 
-**Inputs:** Features with `depends_on` in frontmatter (≥1 pair)
+**Inputs:** Features with `depends_on` (≥1 pair) | **Skip:** No `depends_on`
 
-**Skip if:** No features with `depends_on` field
+**Verifies:** Dependent features integrate with dependencies in code
 
-**Verifies:** Dependent features actually integrate with dependency features in code
-
-**Algorithm:** Build dependency pairs, verify each pair (query KB for exports, grep dependent files for imports/usage, verify API patterns), classify findings.
+**Algorithm:** Build pairs → query KB for exports → grep imports/usage → verify API patterns → classify
 
 | Severity | Condition |
 |----------|-----------|
@@ -78,11 +73,9 @@ Run all checks whose inputs exist. Skip others and note in report.
 
 ### Check 2: Blast Area Overlap Coordination
 
-**Inputs:** Features with overlapping blast areas (≥1 overlap)
+**Inputs:** Overlapping blast areas (≥1) | **Skip:** No overlaps
 
-**Skip if:** No overlapping blast areas found
-
-**Algorithm:** Build blast area map, find overlaps, query KB for approaches, detect conflicts vs coordination.
+**Algorithm:** Build map → find overlaps → query KB approaches → detect conflicts vs coordination
 
 | Severity | Condition |
 |----------|-----------|
@@ -92,11 +85,9 @@ Run all checks whose inputs exist. Skip others and note in report.
 
 ### Check 3: Implementation Gap Detection
 
-**Inputs:** Feature acceptance criteria, implementations (≥2 features)
+**Inputs:** Acceptance criteria, implementations (≥2 features) | **Skip:** < 2 features
 
-**Skip if:** < 2 implemented features
-
-**Algorithm:** Grep criteria for integration keywords, verify implied integrations exist in code via KB queries.
+**Algorithm:** Grep criteria for integration keywords → verify via KB queries
 
 | Severity | Condition |
 |----------|-----------|
@@ -106,11 +97,9 @@ Run all checks whose inputs exist. Skip others and note in report.
 
 ### Check 4: Cross-Feature Pattern Consistency
 
-**Inputs:** Multiple features in same domain (≥2 per domain)
+**Inputs:** Multiple features per domain (≥2) | **Skip:** < 2 per domain
 
-**Skip if:** < 2 features per domain
-
-**Algorithm:** Group by domain from blast area precision, query KB for pattern comparison, check intentionality if divergent.
+**Algorithm:** Group by domain → query KB patterns → check divergence intentionality
 
 | Severity | Condition |
 |----------|-----------|
@@ -119,11 +108,11 @@ Run all checks whose inputs exist. Skip others and note in report.
 
 ## Process
 
-### Step 1: Run Applicable Checks
+### Step 1: Run Checks
 
-Execute checks 1-4 based on inputs available. After completing each check, continue to the next check. Collect findings. Note skipped checks with reasons.
+Execute checks 1-4 per input availability. Collect findings. Note skipped checks with reasons.
 
-### Step 2: Present Audit Report (BLOCKING)
+### Step 2: Present Report (BLOCKING)
 
 **Format:**
 
@@ -154,11 +143,11 @@ Features Audited: N features (M implemented)
 [PASS | FAIL] - [Summary of ERRORs if FAIL]
 ```
 
-**Present to user:** Show findings table, summary, then ask: "Proceed? **Fix** | **Accept** | **Done**"
+Present findings, ask: "Proceed? **Fix** | **Accept** | **Done**"
 
-### Step 3: Handle User Choice
+### Step 3: Handle Choice
 
-**Fix:** Recommend actions for ERRORs and WARNINGs:
+**Fix:** Recommend actions:
 
 | Finding Type | Recommended Action |
 |--------------|-------------------|
@@ -167,33 +156,25 @@ Features Audited: N features (M implemented)
 | Implementation gap | Implement missing integration, update acceptance criteria verification |
 | Pattern inconsistency | Align patterns or document intentional divergence in Technical Decisions |
 
-**Accept:** Ask which findings to accept. Get one-line rationale per finding. Log in report under each finding.
+**Accept:** Get one-line rationale per finding, log in report.
 
-**Done:** Save report as-is.
+**Done:** Save as-is.
 
-### Step 4: Save Audit Report
+### Step 4: Save Report
 
-Save to `docs/specs/<product>/audit.md` (overwrite each run). Register in specs.md Outputs per [standard format](../references/output-conventions.md):
+Save to `docs/specs/<product>/audit.md` (overwrite). Register in specs.md Outputs ([format](../references/output-conventions.md)): `- Audit: docs/specs/<product>/audit.md`
 
-```markdown
-- Audit: docs/specs/<product>/audit.md
-```
+## Red Flags
 
-If entry exists, replace. If new, append to Outputs section.
+Stop rationalizing - run full checks:
 
-## Red Flags - Signs You're Skipping Checks
-
-These thoughts mean STOP - you're rationalizing away verification:
-
-- "Individual gates passed, integration must be fine"
-- "Tests pass, so features integrate correctly"
-- "Time pressure means skip deep checks"
-- "Tech lead reviewed, don't need to verify code"
-- "Just check documentation consistency"
-- "Quick sanity check is enough"
-- "Developer is tired, rubber-stamp to help"
-
-**All of these mean: Run the full checks. No shortcuts.**
+- "Gates passed → integration fine"
+- "Tests pass → integrates correctly"
+- "Time pressure → skip checks"
+- "Reviewed → no verification needed"
+- "Just check docs consistency"
+- "Quick sanity check enough"
+- "Tired → rubber-stamp"
 
 ## Common Mistakes
 
